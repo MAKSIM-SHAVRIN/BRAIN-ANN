@@ -1,7 +1,8 @@
+from json import load
+from pathlib import Path
+
 from population import BrainsPopulation
 from utils import jaro_loss
-from pathlib import Path
-from json import load
 
 
 # Testing;
@@ -12,14 +13,13 @@ if __name__ == '__main__':
     with open(dataset_path, mode='r') as filebuffer:
         dataset = load(fp=filebuffer)
 
-    saving_file = f'{project_path}/save.json'
+    saving_dir = f'{project_path}/population_save'
 
-    population = BrainsPopulation.load(saving_file)
-    population.change_size_to(neuronets_number=100)
+    population = BrainsPopulation.load(saving_dir)
     population.tich(
         loss_function=jaro_loss,
         dataset=dataset,
         mortality=0.7,
         mutability=0.05,
-        save_population_path=saving_file,
+        save_population_path=saving_dir,
     )

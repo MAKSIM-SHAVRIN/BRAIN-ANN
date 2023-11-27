@@ -1,62 +1,48 @@
 from json import dump, load
 from operator import attrgetter
-from random import choice, shuffle, uniform
+from pathlib import Path
+from random import choice, choices, shuffle, uniform
+from string import ascii_letters
 from time import time
 
-from brain import Brain
+from recurent import Brain
 from utils import mean, split_by_evenodd_position
 
 
 class BrainsPopulation:
     def __init__(self, size: int, saving_dir: str):
+        def random_token():
+            return ''.join(choices(list(ascii_letters), k=10))
+
+        def path(token):
+            return f'{saving_dir}save_{token}.json'
+
         self.brains = list()
-
         for _ in range(size):
-            saving_file_path = f'{saving_dir}save_{token}.json'
-            new_brain = Brain(saving_file_path=saving_file_path)
+            token = random_token()
+            saving_file_path = path(token)
+            while Path(saving_file_path).exists():
+                token = random_token()
+                saving_file_path = path(token)
+            new_brain = Brain(saving_file_path)
             self.brains.append(new_brain)
-
-    def save(self, file: str) -> str:
-        print('\nPOPULATION SAVING:')
-        with open(file=file, mode='w', encoding='ascii') as filebuffer:
-            data_for_dump = list()
-            for brain in self.brains:
-                middle_layers_structure = brain.middle_layers_structure
-                memory_cells_number = brain.memory_cells_number
-                weights = [weight.value for weight in brain.all_weights]
-                data_for_dump.append(
-                    dict(
-                        middle_layers_structure=middle_layers_structure,
-                        memory_cells_number=memory_cells_number,
-                        weights=weights,
-                    ),
-                )
-            dump(obj=data_for_dump, fp=filebuffer, indent=4)
-        print('SAVED')
-        return file
+            print(f'\nPOPULATION MEMBER {token} IS CREATED')
 
     @classmethod
-    def load(cls, file: str):
+    def load(cls, saving_dir: str):
         print('\nLOADING:')
-        with open(file=file, mode='r', encoding='ascii') as filebuffer:
-            data_from_load = load(fp=filebuffer)
-            neuronets = list()
-            for dctnry in data_from_load:
-                brain = Brain(
-                    middle_layers_structure=dctnry['middle_layers_structure'],
-                    memory_cells_number=dctnry['memory_cells_number']
-                )
-                for position, weight in enumerate(brain.all_weights):
-                    weight.value = dctnry['weights'][position]
-                neuronets.append(brain)
-            population = cls(size=1, neuronet=neuronets[-1])
-            population.neuronets = neuronets
+        brains = list()
+        for filepath in Path(saving_dir).iterdir():
+            brain = Brain.load(saving_file_path=filepath)
+            brains.append(brain)
+        population = cls.__new__(cls)
+        population.brains = brains
         print('POPULATION LOADED')
         return population
 
     def tich(
         self, loss_function, dataset: list,
-        mortality=0.4, loss=0.25, mutability=0.2,
+        mortality: float=0.4, loss: float=0.25, mutability: float=0.2,
         with_cross_over=False, save_population_path=None,
     ):
         while True:
