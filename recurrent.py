@@ -7,6 +7,21 @@ from utils import (conv_int_to_list, conv_list_to_int, dict_sum,
 
 
 class Recurrent(Perceptron):
+    SIGNALS = dict(
+        STOP_SIGNAL=[0, 0, 1],
+        SKIP_SIGNAL=[0, 1, 0],
+        REPEAT_SIGNAL=[1, 0, 0],
+        STOP_REFLECTIONS_SIGNAL=[1, 1, 1],
+
+        ADD_NEURON_SIGNAL=[1, 0, 0],
+        DELETE_NEURON_SIGNAL=[0, 1, 1],
+
+        ADD_WRITTING_MEMORY_SIGNAL=[0, 0, 1],
+        DELETE_WRITTING_MEMORY_SIGNAL=[1, 1, 0],
+        ADD_READING_MEMORY_SIGNAL=[1, 0, 1],
+        DELETE_READING_MEMORY_SIGNAL=[0, 1, 0],
+    )
+
     MEMORY_CELL_STRUCTURE = dict(
         layer_adress=10,
         neuron_adress=10,
@@ -188,20 +203,6 @@ class Recurrent(Perceptron):
         return reading_memory_inputs_binary_list
 
     def __call__(self, inputs: list[list], time_limit=None):
-        # signals
-        STOP_SIGNAL = [0, 0, 1]
-        SKIP_SIGNAL = [0, 1, 0]
-        REPEAT_SIGNAL = [1, 0, 0]
-        STOP_REFLECTIONS_SIGNAL = [1, 1, 1]
-
-        ADD_NEURON_SIGNAL = [1, 0, 0]
-        DELETE_NEURON_SIGNAL = [0, 1, 1]
-
-        ADD_WRITTING_MEMORY_SIGNAL = [0, 0, 1]
-        DELETE_WRITTING_MEMORY_SIGNAL = [1, 1, 0]
-        ADD_READING_MEMORY_SIGNAL = [1, 0, 1]
-        DELETE_READING_MEMORY_SIGNAL = [0, 1, 0]
-
         # Start of timer
         if time_limit:
             start_time = time()
@@ -270,12 +271,12 @@ class Recurrent(Perceptron):
                             volumes=self.REFORMING_NEURONS_STRUCTURE.values(),
                         )
 
-                        if reforming_signal == ADD_NEURON_SIGNAL:
+                        if reforming_signal == self.SIGNALS['ADD_NEURON_SIGNAL']:
                             self._add_neuron(
                                 layer_adress=reforming_layer_adress,
                             )
 
-                        elif reforming_signal == DELETE_NEURON_SIGNAL:
+                        elif reforming_signal == self.SIGNALS['DELETE_NEURON_SIGNAL']:
                             self._delete_neuron(
                                 layer_adress=reforming_layer_adress,
                                 neuron_adress=reforming_neuron_adress,
