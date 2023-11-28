@@ -117,15 +117,75 @@ class Recurrent(Perceptron):
             reading_memory_neurons=reading_memory_neurons,
         )
 
-    def add_neuron(self, layer_adress: list[int]):
+    def _add_neuron(self, layer_adress: list[int]):
         neuron_inputs_number = self.structure[layer_number]
         self.layers[layer_number].add_neuron(neuron_inputs_number)
         # add weights for each neuron of the next layer
         self.layers[layer_number + 1].add_weights()
 
-    def delete_neuron(self, layer_adress: list[int], neuron_adress: list[int]):
+    def _delete_neuron(self, layer_adress: list[int], neuron_adress: list[int]):
         self.layers[layer_number].neurons.pop(index=neuron_number)
 
+    def _write_weights(self, writing_memory: list[int]):
+        for _ in range(self.writing_memory_cells_number):
+            (
+                layer_outputs,
+                neuron_outputs,
+                weight_outputs,
+                writing_memory,
+
+            ) = split_by_volumes(
+                list_for_split=writing_memory,
+                volumes=self.MEMORY_CELL_STRUCTURE.values(),
+            )
+            neurons = self.layers[get_index_by_fraction(
+                sequence=self.layers,
+                fraction=1 / conv_list_to_int(layer_outputs),
+            )].neurons
+
+            weights = neurons[get_index_by_fraction(
+                sequence=neurons,
+                fraction=1 / conv_list_to_int(neuron_outputs),
+            )].weights
+
+            element_index = get_index_by_fraction(
+                sequence=weights,
+                fraction=1 / conv_list_to_int(weight_outputs),
+            )
+
+            weights[element_index] = -weights[element_index]
+
+    def _read_weights(self, reading_memory: list[int]):
+        reading_memory_inputs_binary_list = list()
+        for _ in range(self.reading_memory_cells_number):
+            (
+                layer_outputs,
+                neuron_outputs,
+                weight_outputs,
+                reading_memory,
+
+            ) = split_by_volumes(
+                list_for_split=reading_memory,
+                volumes=self.MEMORY_CELL_STRUCTURE.values(),
+            )
+
+            neurons = self.layers[get_index_by_fraction(
+                sequence=self.layers,
+                fraction=1 / conv_list_to_int(layer_outputs),
+            )].neurons
+
+            weights = neurons[get_index_by_fraction(
+                sequence=neurons,
+                fraction=1 / conv_list_to_int(neuron_outputs),
+            )].weights
+
+            element_index = get_index_by_fraction(
+                sequence=weights,
+                fraction=1 / conv_list_to_int(weight_outputs),
+            )
+
+            reading_memory_inputs_binary_list.append(weights[element_index])
+        return reading_memory_inputs_binary_list
 
     def __call__(self, inputs: list[list], time_limit=None):
         # signals
@@ -149,8 +209,7 @@ class Recurrent(Perceptron):
         # Save initial request for use it if reflections stopped
         initial_request = inputs
 
-        reading_memory_inputs_binary_list = [0,]\
-            * self.reading_memory_cells_number
+        reading_memory_inputs = [0,] * self.reading_memory_cells_number
 
         # Reflections
         while True:
@@ -175,7 +234,7 @@ class Recurrent(Perceptron):
                                 *inputs_values,
                                 *time_binary_list,
                                 *reflections_binary_list,
-                                *reading_memory_inputs_binary_list,
+                                *reading_memory_inputs,
                             ],
                         )
 
@@ -193,65 +252,12 @@ class Recurrent(Perceptron):
                             )
 
                         # Write weights
-                        for _ in range(self.writing_memory_cells_number):
-                            (
-                                layer_outputs,
-                                neuron_outputs,
-                                weight_outputs,
-                                writing_memory,
-
-                            ) = split_by_volumes(
-                                list_for_split=writing_memory,
-                                volumes=self.MEMORY_CELL_STRUCTURE.values(),
-                            )
-                            neurons = self.layers[get_index_by_fraction(
-                                sequence=self.layers,
-                                fraction=1 / conv_list_to_int(layer_outputs),
-                            )].neurons
-
-                            weights = neurons[get_index_by_fraction(
-                                sequence=neurons,
-                                fraction=1 / conv_list_to_int(neuron_outputs),
-                            )].weights
-
-                            element_index = get_index_by_fraction(
-                                sequence=weights,
-                                fraction=1 / conv_list_to_int(weight_outputs),
-                            )
-
-                            weights[element_index] = -weights[element_index]
+                        self._write_weights(writing_memory)
 
                         # Read weights
-                        reading_memory_inputs_binary_list = list()
-                        for _ in range(self.reading_memory_cells_number):
-                            (
-                                layer_outputs,
-                                neuron_outputs,
-                                weight_outputs,
-                                reading_memory,
-
-                            ) = split_by_volumes(
-                                list_for_split=reading_memory,
-                                volumes=self.MEMORY_CELL_STRUCTURE.values(),
-                            )
-
-                            neurons = self.layers[get_index_by_fraction(
-                                sequence=self.layers,
-                                fraction=1 / conv_list_to_int(layer_outputs),
-                            )].neurons
-
-                            weights = neurons[get_index_by_fraction(
-                                sequence=neurons,
-                                fraction=1 / conv_list_to_int(neuron_outputs),
-                            )].weights
-
-                            element_index = get_index_by_fraction(
-                                sequence=weights,
-                                fraction=1 / conv_list_to_int(weight_outputs),
-                            )
-
-                            reading_memory_inputs_binary_list\
-                                .append(weights[element_index])
+                        reading_memory_inputs = self._read_weights(
+                            reading_memory,
+                        )
 
                         # Add or delete neuron
                         (
@@ -265,12 +271,12 @@ class Recurrent(Perceptron):
                         )
 
                         if reforming_signal == ADD_NEURON_SIGNAL:
-                            self.add_neuron(
+                            self._add_neuron(
                                 layer_adress=reforming_layer_adress,
                             )
 
                         elif reforming_signal == DELETE_NEURON_SIGNAL:
-                            self.delete_neuron(
+                            self._delete_neuron(
                                 layer_adress=reforming_layer_adress,
                                 neuron_adress=reforming_neuron_adress,
                             )
