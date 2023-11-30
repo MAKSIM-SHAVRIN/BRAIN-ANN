@@ -10,7 +10,7 @@ UNICODE_RANGES = [
 ]
 
 
-def split_by_volumes(list_for_split: list, volumes: list):
+def split_by_volumes(list_for_split: list, volumes: list[int]):
     resoult_lists = list()
     for volume in volumes:
         resoult_lists.append(list_for_split[:volume])
@@ -39,10 +39,6 @@ def dict_sum(dictionary_of_numbers: dict):
     return sum(dictionary_of_numbers.values())
 
 
-def get_index_by_fraction(sequence, fraction):
-    return round(fraction * (len(sequence) - 1))
-
-
 def conv_int_to_list(number: int, width: int) -> list[int]:
     resoult_list = list()
     while number != 0:
@@ -54,6 +50,17 @@ def conv_int_to_list(number: int, width: int) -> list[int]:
 
 def conv_list_to_int(binaries_list: list) -> int:
     return sum([n*2**p for p, n in enumerate(reversed(binaries_list))])
+
+
+def get_index_by_adress(sequence, adress: list[int]):
+    fraction = conv_list_to_int(adress) / (2 ** len(adress) - 1)
+    return int(round((len(sequence) - 1) * fraction))
+
+
+def get_element_by_adress(sequence, adress: list[int]):
+    fraction = conv_list_to_int(adress) / (2 ** len(adress) - 1)
+    index = int(round((len(sequence) - 1) * fraction))
+    return sequence[index]
 
 
 def make_simple_structure(
@@ -89,34 +96,3 @@ def mix_in(*mixins):
 
 def split_by_evenodd_position(sequence) -> tuple:
     return (sequence[::2], sequence[1::2])
-
-
-def count_loss(self, loss_function, dataset):
-    losses, speeds, lengths = list(), list(), list()
-    for case in dataset:
-        time_limit = case['T']
-        request = case['Q'].replace('%T%', str(time_limit))
-        waited_response = case['A']
-
-        start = time()
-        real_response = self(request, time_limit=time_limit)
-        finish = time()
-        real_time = int(finish - start)
-
-        try:
-            print(f'RESPONSE {real_time}/{time_limit} sec: {real_response}')
-        except UnicodeEncodeError:
-            pass
-        responses_lengths = [len(waited_response), len(real_response)]
-
-        losses.append(loss_function(waited_response, real_response))
-        speeds.append(real_time / time_limit)
-        lengths.append(
-            max(responses_lengths) / (min(responses_lengths) + 1),
-        )
-    self.loss = mean(losses)
-    print(f'LOSS: {self.loss} ', end='')
-    self.speed = mean(speeds)
-    print(f'SPEED: {self.speed} ', end='')
-    self.length = mean(lengths)
-    print(f'LENGTH: {self.length} ')
