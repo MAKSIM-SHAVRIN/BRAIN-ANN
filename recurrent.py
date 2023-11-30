@@ -3,25 +3,26 @@ from time import time
 
 from perceptron import Perceptron
 from utils import (conv_int_to_list, conv_list_to_int, dict_sum,
-                   split_by_volumes, get_index_by_fraction)
+                   get_element_by_adress, get_index_by_adress,
+                   split_by_volumes)
 
 
 class Recurrent(Perceptron):
-    SIGNALS = dict(
-        STOP_SIGNAL=[0, 0, 1],
-        SKIP_SIGNAL=[0, 1, 0],
-        REPEAT_SIGNAL=[1, 0, 0],
-        STOP_REFLECTIONS_SIGNAL=[1, 1, 1],
+    # Signals
+    STOP_SIGNAL = [0, 0, 1],
+    SKIP_SIGNAL = [0, 1, 0],
+    REPEAT_SIGNAL = [1, 0, 0],
+    STOP_REFLECTIONS_SIGNAL = [1, 1, 1],
 
-        ADD_NEURON_SIGNAL=[1, 0, 0],
-        DELETE_NEURON_SIGNAL=[0, 1, 1],
+    ADD_NEURON_SIGNAL = [1, 0, 0],
+    DELETE_NEURON_SIGNAL = [0, 1, 1],
 
-        ADD_WRITTING_MEMORY_SIGNAL=[0, 0, 1],
-        DELETE_WRITTING_MEMORY_SIGNAL=[1, 1, 0],
-        ADD_READING_MEMORY_SIGNAL=[1, 0, 1],
-        DELETE_READING_MEMORY_SIGNAL=[0, 1, 0],
-    )
+    ADD_WRITTING_MEMORY_SIGNAL = [0, 0, 1],
+    DELETE_WRITTING_MEMORY_SIGNAL = [1, 1, 0],
+    ADD_READING_MEMORY_SIGNAL = [1, 0, 1],
+    DELETE_READING_MEMORY_SIGNAL = [0, 1, 0],
 
+    # Net structure
     MEMORY_CELL_STRUCTURE = dict(
         layer_adress=10,
         neuron_adress=10,
@@ -132,51 +133,28 @@ class Recurrent(Perceptron):
             reading_memory_neurons=reading_memory_neurons,
         )
 
-    def _add_neuron(self, layer_adress: list[int]):
-        neuron_inputs_number = self.structure[layer_number]
-        self.layers[layer_number].add_neuron(neuron_inputs_number)
-        # add weights for each neuron of the next layer
-        self.layers[layer_number + 1].add_weights()
-
-    def _delete_neuron(self, layer_adress: list[int], neuron_adress: list[int]):
-        self.layers[layer_number].neurons.pop(index=neuron_number)
-
     def _write_weights(self, writing_memory: list[int]):
         for _ in range(self.writing_memory_cells_number):
             (
-                layer_outputs,
-                neuron_outputs,
-                weight_outputs,
+                layer_outputs, neuron_outputs, weight_outputs,
                 writing_memory,
 
             ) = split_by_volumes(
                 list_for_split=writing_memory,
                 volumes=self.MEMORY_CELL_STRUCTURE.values(),
             )
-            neurons = self.layers[get_index_by_fraction(
-                sequence=self.layers,
-                fraction=1 / conv_list_to_int(layer_outputs),
-            )].neurons
 
-            weights = neurons[get_index_by_fraction(
-                sequence=neurons,
-                fraction=1 / conv_list_to_int(neuron_outputs),
-            )].weights
+            neurons = get_element_by_adress(self.layers, layer_outputs).neurons
+            weights = get_element_by_adress(neurons, neuron_outputs,).weights
+            weight_index = get_index_by_adress(weights, weight_outputs)
 
-            element_index = get_index_by_fraction(
-                sequence=weights,
-                fraction=1 / conv_list_to_int(weight_outputs),
-            )
-
-            weights[element_index] = -weights[element_index]
+            weights[weight_index] = -weights[weight_index]
 
     def _read_weights(self, reading_memory: list[int]):
         reading_memory_inputs_binary_list = list()
         for _ in range(self.reading_memory_cells_number):
             (
-                layer_outputs,
-                neuron_outputs,
-                weight_outputs,
+                layer_outputs, neuron_outputs, weight_outputs,
                 reading_memory,
 
             ) = split_by_volumes(
@@ -184,23 +162,27 @@ class Recurrent(Perceptron):
                 volumes=self.MEMORY_CELL_STRUCTURE.values(),
             )
 
-            neurons = self.layers[get_index_by_fraction(
-                sequence=self.layers,
-                fraction=1 / conv_list_to_int(layer_outputs),
-            )].neurons
+            neurons = get_element_by_adress(self.layers, layer_outputs).neurons
+            weights = get_element_by_adress(neurons, neuron_outputs,).weights
+            weight_index = get_index_by_adress(weights, weight_outputs)
 
-            weights = neurons[get_index_by_fraction(
-                sequence=neurons,
-                fraction=1 / conv_list_to_int(neuron_outputs),
-            )].weights
-
-            element_index = get_index_by_fraction(
-                sequence=weights,
-                fraction=1 / conv_list_to_int(weight_outputs),
-            )
-
-            reading_memory_inputs_binary_list.append(weights[element_index])
+            reading_memory_inputs_binary_list.append(weights[weight_index])
         return reading_memory_inputs_binary_list
+
+    def _add_neuron(self, layer_adress: list[int]):
+        layer_index = get_index_by_fraction(
+            sequence=self.layers,
+            fraction=1 / conv_list_to_int(layer_adress),
+        )
+        neuron_inputs_number = self.structure[layer_number]
+        self.layers[layer_index].add_neuron(neuron_inputs_number)
+        # add weights for each neuron of the next layer
+        self.layers[layer_number + 1].add_weights()
+
+    def _delete_neuron(
+        self, layer_adress: list[int], neuron_adress: list[int],
+    ):
+        self.layers[layer_number].neurons.pop(index=neuron_number)
 
     def __call__(self, inputs: list[list], time_limit=None):
         # Start of timer
@@ -210,6 +192,7 @@ class Recurrent(Perceptron):
         # Save initial request for use it if reflections stopped
         initial_request = inputs
 
+        # Fill initial reading_memory_inputs by zero values
         reading_memory_inputs = [0,] * self.reading_memory_cells_number
 
         # Reflections
@@ -271,12 +254,12 @@ class Recurrent(Perceptron):
                             volumes=self.REFORMING_NEURONS_STRUCTURE.values(),
                         )
 
-                        if reforming_signal == self.SIGNALS['ADD_NEURON_SIGNAL']:
+                        if reforming_signal == self.ADD_NEURON_SIGNAL:
                             self._add_neuron(
                                 layer_adress=reforming_layer_adress,
                             )
 
-                        elif reforming_signal == self.SIGNALS['DELETE_NEURON_SIGNAL']:
+                        elif reforming_signal == self.DELETE_NEURON_SIGNAL:
                             self._delete_neuron(
                                 layer_adress=reforming_layer_adress,
                                 neuron_adress=reforming_neuron_adress,
