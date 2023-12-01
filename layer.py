@@ -17,6 +17,9 @@ class Layer:
     def _add_neuron(self, neuron_inputs_number: int):
         self.neurons.append(Neuron(neuron_inputs_number))
 
+    def _insert_neuron(self, index: int, neuron_inputs_number: int):
+        self.neurons.insert(index, Neuron(neuron_inputs_number))
+
     def _add_weights(self):
         for neuron in self.neurons:
             neuron._add_weight()
