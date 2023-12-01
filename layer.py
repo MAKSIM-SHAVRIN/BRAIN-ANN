@@ -8,7 +8,6 @@ class Layer:
             self.neurons.append(Neuron(neuron_inputs_number))
 
     def __call__(self, inputs_values: list[int]) -> list[int]:
-        inputs_values.insert(0, 1)  # Add bias is always 1
         return [neuron(inputs_values) for neuron in self.neurons]
 
     def __repr__(self):
