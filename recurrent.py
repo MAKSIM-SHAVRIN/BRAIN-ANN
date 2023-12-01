@@ -170,19 +170,83 @@ class Recurrent(Perceptron):
         return reading_memory_inputs_binary_list
 
     def _add_neuron(self, layer_adress: list[int]):
-        layer_index = get_index_by_fraction(
-            sequence=self.layers,
-            fraction=1 / conv_list_to_int(layer_adress),
-        )
-        neuron_inputs_number = self.structure[layer_number]
-        self.layers[layer_index].add_neuron(neuron_inputs_number)
+        # `self.layers[:-1]` exclude last layer cuz it contains signal clasters
+        layer_index = get_index_by_adress(self.layers[:-1], layer_adress)
+        layer = self.layers[layer_index]
+        # get inputs number from previous layer neurons number
+        inputs_number = self.structure[layer_index]
+        layer._add_neuron(neuron_inputs_number=inputs_number)
         # add weights for each neuron of the next layer
-        self.layers[layer_number + 1].add_weights()
+        self.layers[layer_index + 1]._add_weights()
 
-    def _delete_neuron(
-        self, layer_adress: list[int], neuron_adress: list[int],
-    ):
-        self.layers[layer_number].neurons.pop(index=neuron_number)
+    def _delete_neuron(self, layer_adress: list[int], neuron_adress: list):
+        # `self.layers[:-1]` exclude last layer cuz it contains signal clasters
+        layer_index = get_index_by_adress(self.layers[:-1], layer_adress)
+        layer = self.layers[layer_index]
+        neuron_index = get_index_by_adress(layer.neurons, neuron_adress)
+        layer.neurons.pop(neuron_index)
+        # delete due weights for each neuron of the next layer
+        self.layers[layer_index + 1]._delete_weights(neuron_index)
+
+    def _add_writing_memory_neurons(self):
+        last_layer = self.layers[-1]
+        inputs_number = len(self.layers[-2].neurons)
+        index = self.signifying_outputs_number\
+            + self.SIGNAL_NEURONS_NUMBER\
+            + dict_sum(self.REFORMING_NEURONS_STRUCTURE)
+        for _ in dict_sum(self.MEMORY_CELL_STRUCTURE.values()):
+            last_layer._insert_neuron(index, inputs_number)
+
+    def _delete_writing_memory_neurons(self):
+        if self.writing_memory_cells_number:
+            last_layer = self.layers[-1]
+            index = self.signifying_outputs_number\
+                + self.SIGNAL_NEURONS_NUMBER\
+                + dict_sum(self.REFORMING_NEURONS_STRUCTURE)
+            for _ in dict_sum(self.MEMORY_CELL_STRUCTURE.values()):
+                last_layer.neurons.pop(index)
+
+    def _add_reading_memory_neurons(self):
+        last_layer = self.layers[-1]
+        inputs_number = len(self.layers[-2].neurons)
+        for _ in dict_sum(self.MEMORY_CELL_STRUCTURE.values()):
+            last_layer._add_neuron(inputs_number)
+        # add reading memory input
+        self.layers[0]._add_weights()
+
+    def _delete_reading_memory_neurons(self):
+        if self.reading_memory_cells_number:
+            last_layer = self.layers[-1]
+            for _ in dict_sum(self.MEMORY_CELL_STRUCTURE.values()):
+                last_layer.neurons.pop()
+            # delete reading memory input
+            self.layers[0]._delete_weights(weight_number=self.structure[0])
+
+    def _transform(self, transforming_outputs: list[int]):
+        signal, layer_adress, neuron_adress = split_by_volumes(
+            list_for_split=transforming_outputs,
+            volumes=self.REFORMING_NEURONS_STRUCTURE.values(),
+        )
+        # Add or delete neuron
+        if signal == self.ADD_NEURON_SIGNAL:
+            self._add_neuron(layer_adress)
+
+        elif signal == self.DELETE_NEURON_SIGNAL:
+            self._delete_neuron(layer_adress, neuron_adress)
+
+        # Add or delete writting memory neurons
+        elif signal == self.ADD_WRITTING_MEMORY_SIGNAL:
+            self._add_writing_memory_neurons()
+
+        elif signal == self.DELETE_WRITTING_MEMORY_SIGNAL:
+            self._delete_writing_memory_neurons()
+
+        # Add or delete reading memory neurons
+        elif signal == self.ADD_READING_MEMORY_SIGNAL:
+            self._add_reading_memory_neurons()
+
+        elif signal == self.DELETE_READING_MEMORY_SIGNAL:
+            self._delete_reading_memory_neurons()
 
     def __call__(self, inputs: list[list], time_limit=None):
         # Start of timer
@@ -197,7 +261,7 @@ class Recurrent(Perceptron):
 
         # Reflections loop
         while True:
-            for reflection in range(2 ** self.REFLECTIONS_INPUTS_NUMBER):
+            for reflection in range(2 ** self.REFLECTIONS_INPUTS_NUMBER - 1):
                 resoults = list()
                 for inputs_values in inputs:
                     while True:  # don't breaking if signal is repeat_signal
@@ -225,8 +289,8 @@ class Recurrent(Perceptron):
                         # Split binary list to valuable binary lists
                         (
                             signifying_outputs,
-                            signal,
-                            reforming,
+                            controlling_signal,
+                            transforming,
                             writing_memory,
                             reading_memory,
 
@@ -242,80 +306,51 @@ class Recurrent(Perceptron):
                         reading_memory_inputs = self._read_weights(
                             reading_memory,
                         )
-
-                        # Add or delete neuron
-                        (
-                            reforming_signal,
-                            reforming_layer_adress,
-                            reforming_neuron_adress,
-
-                        ) = split_by_volumes(
-                            list_for_split=reforming,
-                            volumes=self.REFORMING_NEURONS_STRUCTURE.values(),
-                        )
-
-                        if reforming_signal == self.ADD_NEURON_SIGNAL:
-                            self._add_neuron(
-                                layer_adress=reforming_layer_adress,
-                            )
-
-                        elif reforming_signal == self.DELETE_NEURON_SIGNAL:
-                            self._delete_neuron(
-                                layer_adress=reforming_layer_adress,
-                                neuron_adress=reforming_neuron_adress,
-                            )
-
-                        # Add or delete memory neurons
-                        last_layer_index = len(perceptron.layers)
-                        if add_delete_memory == add_memory_signal:
-                            for _ in range(dict_sum(self.memory_cell_structure)):
-                                perceptron.add_neuron(last_layer_index)
-                        if add_delete_memory == delete_memory_signal and memory_cells_number()>1:
-                            for _ in range(dict_sum(self.memory_cell_structure)):
-                                perceptron.delete_neuron(last_layer_index)
+                        # Transforming
+                        self._transform(transforming_outputs=transforming)
 
                         # Convert binary signals list to character
-                        if controlling_signal == skip_signal:
-                            response_character = ''
+                        if controlling_signal == self.SKIP_SIGNAL:
+                            signifying_outputs = []
                         else:
                             raw_index = conv_list_to_int(character_outputs)
                             maximal_index = len(self.coding_string) - 1
                             if raw_index > maximal_index:
-                                response_character = ''
+                                signifying_outputs = []
                             else:
-                                response_character = self.coding_string[raw_index]
+                                signifying_outputs = self.coding_string[raw_index]
 
                         # Add character to list of resoults
-                        resoults.append(response_character)
+                        resoults.append(signifying_outputs)
 
                         # Stop by time limit
                         if time_limit and time_limit < time() - start_time:
                             controlling_signal = stop_signal
 
                         # Stop repeating
-                        if controlling_signal != repeat_signal:
+                        if controlling_signal != self.REPEAT_SIGNAL:
                             break
 
                     # Stop iterations
-                    if controlling_signal == stop_signal:
+                    if controlling_signal == self.STOP_SIGNAL:
                         break
-                    if reflection > 0 and controlling_signal == stop_reflections_signal:
+                    if reflection > 0 and controlling_signal == self.STOP_REFLECTIONS_SIGNAL:
                         break
 
                 # Stop reflections
-                if controlling_signal == stop_signal:
+                if controlling_signal == self.STOP_SIGNAL:
                     break
 
                 # Prepare request for new reflection from  results
-                request = ''.join(resoults)
+                request = [].extend(signifying_outputs)
 
                 # Reset reflections and turn back to initial request
-                if reflection > 0 and controlling_signal == stop_reflections_signal:
+                if reflection > 0 and controlling_signal == self.STOP_REFLECTIONS_SIGNAL:
                     request = initial_request
                     reflection = 0
-                elif request == '':
+                elif request == []:
                     request = initial_request
                     reflection = 0
                 else:
                     reflection += 1
-        return ''.join(resoults)
+        return [].extend(signifying_outputs)
