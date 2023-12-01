@@ -14,6 +14,9 @@ class NeuronTestCase(TestCase):
         with self.assertRaises(ValueError):
             count_arrays_product([1, -1, -1], [0, 0])
 
+        with self.assertRaises(ValueError):
+            count_arrays_product([0], [1, -1, -1, -8])
+
     def test_Neuron__init__(self):
         neuron = Neuron(inputs_number=4)
         self.assertEqual(len(neuron.weights), 5)
