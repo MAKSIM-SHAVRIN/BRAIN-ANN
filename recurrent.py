@@ -2,25 +2,25 @@ from json import dump, load
 from time import time
 
 from perceptron import Perceptron
-from utils import (conv_int_to_list, conv_list_to_int, dict_sum,
-                   get_element_by_adress, get_index_by_adress,
-                   split_by_volumes)
+from utils import (conv_int_to_list, dict_sum, get_element_by_adress,
+                   get_index_by_adress, split_by_volumes)
 
 
 class Recurrent(Perceptron):
     # Signals
-    STOP_SIGNAL = [0, 0, 1],
-    SKIP_SIGNAL = [0, 1, 0],
-    REPEAT_SIGNAL = [1, 0, 0],
-    STOP_REFLECTIONS_SIGNAL = [1, 1, 1],
+    STOP_SIGNAL = [0, 0, 1]
+    SKIP_SIGNAL = [0, 1, 0]
+    REPEAT_SIGNAL = [1, 0, 0]
+    STOP_REFLECTIONS_SIGNAL = [1, 1, 1]
+    NOTHING_SIGNAL = [0, 0, 0]
 
-    ADD_NEURON_SIGNAL = [1, 0, 0],
-    DELETE_NEURON_SIGNAL = [0, 1, 1],
+    ADD_NEURON_SIGNAL = [1, 0, 0]
+    DELETE_NEURON_SIGNAL = [0, 1, 1]
 
-    ADD_WRITTING_MEMORY_SIGNAL = [0, 0, 1],
-    DELETE_WRITTING_MEMORY_SIGNAL = [1, 1, 0],
-    ADD_READING_MEMORY_SIGNAL = [1, 0, 1],
-    DELETE_READING_MEMORY_SIGNAL = [0, 1, 0],
+    ADD_WRITTING_MEMORY_SIGNAL = [0, 0, 1]
+    DELETE_WRITTING_MEMORY_SIGNAL = [1, 1, 0]
+    ADD_READING_MEMORY_SIGNAL = [1, 0, 1]
+    DELETE_READING_MEMORY_SIGNAL = [0, 1, 0]
 
     # Net structure
     MEMORY_CELL_STRUCTURE = dict(
@@ -248,23 +248,36 @@ class Recurrent(Perceptron):
         elif signal == self.DELETE_READING_MEMORY_SIGNAL:
             self._delete_reading_memory_neurons()
 
-    def __call__(self, inputs: list[list], time_limit=None):
+    def __call__(self, inputs: list[list[int]], time_limit=None):
         # Start of timer
         if time_limit:
             start_time = time()
 
+        # initial controlling signal is always do nothing
+        controlling_signal = self.NOTHING_SIGNAL
+
         # Save initial request for use it if reflections stopped
-        initial_request = inputs
+        initial_inputs = inputs
 
         # Fill initial reading_memory_inputs by zero values
         reading_memory_inputs = [0,] * self.reading_memory_cells_number
 
         # Reflections loop
         while True:
+            inputs = initial_inputs
             for reflection in range(2 ** self.REFLECTIONS_INPUTS_NUMBER - 1):
                 resoults = list()
+                # Iterations
                 for inputs_values in inputs:
-                    while True:  # don't breaking if signal is repeat_signal
+                    if controlling_signal == self.SKIP_SIGNAL:
+                        controlling_signal = self.NOTHING_SIGNAL
+                        continue
+                    # Repeating
+                    while True:
+                        # Stop by time limit
+                        if time_limit and time_limit < time() - start_time:
+                            controlling_signal = self.STOP_SIGNAL
+                            break
 
                         # Convert time data to lists of binary signals
                         time_binary_list = conv_int_to_list(
@@ -309,23 +322,8 @@ class Recurrent(Perceptron):
                         # Transforming
                         self._transform(transforming_outputs=transforming)
 
-                        # Convert binary signals list to character
-                        if controlling_signal == self.SKIP_SIGNAL:
-                            signifying_outputs = []
-                        else:
-                            raw_index = conv_list_to_int(character_outputs)
-                            maximal_index = len(self.coding_string) - 1
-                            if raw_index > maximal_index:
-                                signifying_outputs = []
-                            else:
-                                signifying_outputs = self.coding_string[raw_index]
-
                         # Add character to list of resoults
                         resoults.append(signifying_outputs)
-
-                        # Stop by time limit
-                        if time_limit and time_limit < time() - start_time:
-                            controlling_signal = stop_signal
 
                         # Stop repeating
                         if controlling_signal != self.REPEAT_SIGNAL:
@@ -334,23 +332,23 @@ class Recurrent(Perceptron):
                     # Stop iterations
                     if controlling_signal == self.STOP_SIGNAL:
                         break
-                    if reflection > 0 and controlling_signal == self.STOP_REFLECTIONS_SIGNAL:
+                    elif controlling_signal == self.STOP_REFLECTIONS_SIGNAL:
                         break
 
-                # Stop reflections
+                # Stop reflection
                 if controlling_signal == self.STOP_SIGNAL:
+                    break
+                elif controlling_signal == self.STOP_REFLECTIONS_SIGNAL:
+                    break
+
+                # Resoults are empty for the next reflection
+                elif resoults == list():
                     break
 
                 # Prepare request for new reflection from  results
-                request = [].extend(signifying_outputs)
+                inputs = resoults
 
-                # Reset reflections and turn back to initial request
-                if reflection > 0 and controlling_signal == self.STOP_REFLECTIONS_SIGNAL:
-                    request = initial_request
-                    reflection = 0
-                elif request == []:
-                    request = initial_request
-                    reflection = 0
-                else:
-                    reflection += 1
-        return [].extend(signifying_outputs)
+            # Stop reflections loop
+            if controlling_signal == self.STOP_SIGNAL:
+                break
+        return resoults
