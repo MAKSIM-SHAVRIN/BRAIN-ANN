@@ -25,8 +25,9 @@ class Neuron:
     def __repr__(self):
         return f'\n< Neuron with weights: {self.weights} >'
 
-    def add_weight(self):
+    def _add_weight(self):
         self.weights.append(choice((-1, 1,)))
 
-    def delete_weight(self, weight_number: int):
-        self.weights.pop(index=weight_number)
+    def _delete_weight(self, weight_number: int):
+        # add 1 to index remembering about bias weights
+        self.weights.pop(index=weight_number + 1)

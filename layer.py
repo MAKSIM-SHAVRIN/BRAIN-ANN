@@ -14,13 +14,13 @@ class Layer:
     def __repr__(self):
         return f'\n< Layer with {len(self.neurons)} neurons >'
 
-    def add_neuron(self, neuron_inputs_number: int):
+    def _add_neuron(self, neuron_inputs_number: int):
         self.neurons.append(Neuron(neuron_inputs_number))
 
-    def add_weights(self):
+    def _add_weights(self):
         for neuron in self.neurons:
-            neuron.add_weight()
+            neuron._add_weight()
 
-    def delete_weights(self, weight_number: int):
+    def _delete_weights(self, weight_number: int):
         for neuron in self.neurons:
-            neuron.delete_weight()
+            neuron._delete_weight(weight_number)
