@@ -195,7 +195,7 @@ class Recurrent(Perceptron):
         # Fill initial reading_memory_inputs by zero values
         reading_memory_inputs = [0,] * self.reading_memory_cells_number
 
-        # Reflections
+        # Reflections loop
         while True:
             for reflection in range(2 ** self.REFLECTIONS_INPUTS_NUMBER):
                 resoults = list()
