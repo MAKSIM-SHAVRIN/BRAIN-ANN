@@ -45,6 +45,16 @@ class NeuronTestCase(TestCase):
         neuron.weights = [-1, 1, -1, 1]
         self.assertEqual(neuron(inputs_values=[1, 1, 1]), 1)
 
+    def test_Neuron_delete_weight(self):
+        neuron = object.__new__(Neuron)
+        neuron.weights = [-1, 1, -1, 1, -1]
+
+        neuron._delete_weight(weight_number=1)
+        self.assertEqual(neuron.weights, [-1, 1, 1, -1])
+
+        neuron._delete_weight(weight_number=0)
+        self.assertEqual(neuron.weights, [-1, 1, -1])
+
 
 if __name__ == '__main__':
     main()
