@@ -41,4 +41,4 @@ class Neuron:
 
     def _delete_weight(self, weight_number: int):
         # add 1 to index remembering about bias weights
-        self.weights.pop(index=weight_number + 1)
+        self.weights.pop(weight_number + 1)
