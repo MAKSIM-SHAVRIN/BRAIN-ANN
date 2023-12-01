@@ -16,13 +16,13 @@ def count_arrays_product(array_1: list[int], array_2: list[int]) -> list[int]:
 class Neuron:
     def __init__(self, inputs_number: int):
         if inputs_number < 2:
-            raise ValueError('Neuron must have at least two non-bias input')
+            raise ValueError('Neuron must have at least two non-bias inputs')
         # Add the 1 to inputs number for bias weight creating
         self.weights = [choice((-1, 1,)) for _ in range(inputs_number + 1)]
 
     def __call__(self, inputs_values: list[int]) -> int:
         # Add bias is always 1
-        inputs_values.insert(index=0, object=1)
+        inputs_values.insert(0, 1)
 
         # Product inputs values on due weights
         arrays_product = count_arrays_product(self.weights, inputs_values)
