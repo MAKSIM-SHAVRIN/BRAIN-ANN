@@ -23,6 +23,8 @@ class NeuronTestCase(TestCase):
     def test_Neuron__init__wrong_inputs_number(self):
         with self.assertRaises(expected_exception=ValueError):
             Neuron(inputs_number=1)
+        with self.assertRaises(expected_exception=ValueError):
+            Neuron(inputs_number=0)
 
 
 if __name__ == '__main__':
