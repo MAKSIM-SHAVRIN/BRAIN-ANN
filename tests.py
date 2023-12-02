@@ -74,7 +74,7 @@ class LayerTestCase(TestCase):
 
     def test_Layer__init__wrong_arguments(self):
         with self.assertRaises(ValueError):
-            Layer(neuron_inputs_number=3, neurons_number=1)
+            Layer(neuron_inputs_number=3, neurons_number=0)
 
         with self.assertRaises(ValueError):
             Layer(neuron_inputs_number=1, neurons_number=3)
@@ -86,6 +86,13 @@ class LayerTestCase(TestCase):
             neuron.weights = new_weights
         resoult = layer(inputs_values=[-1, 1])
         self.assertEqual(resoult, [0, 1])
+
+        layer = Layer(neuron_inputs_number=2, neurons_number=4)
+        neurons_weights = [[-1, 1, 1], [1, -1, 1], [-1, 1, -1], [1, 1, 1]]
+        for neuron, new_weights in zip(layer.neurons, neurons_weights):
+            neuron.weights = new_weights
+        resoult = layer(inputs_values=[-1, 1])
+        self.assertEqual(resoult, [0, 1, 0, 1])
 
 
 if __name__ == '__main__':
