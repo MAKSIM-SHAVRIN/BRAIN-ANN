@@ -40,5 +40,9 @@ class Neuron:
         self.weights.append(choice((-1, 1,)))
 
     def _delete_weight(self, weight_number: int):
+        if len(self.weights) < 4:
+            raise PermissionError(
+                'Can`t delete cuz Neuron must have atleast two non-bias inputs'
+            )
         # add 1 to index remembering about bias weights
         self.weights.pop(weight_number + 1)
