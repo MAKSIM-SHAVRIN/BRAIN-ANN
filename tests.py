@@ -84,15 +84,23 @@ class LayerTestCase(TestCase):
         neurons_weights = [[-1, 1, 1], [1, -1, 1]]
         for neuron, new_weights in zip(layer.neurons, neurons_weights):
             neuron.weights = new_weights
-        resoult = layer(inputs_values=[-1, 1])
-        self.assertEqual(resoult, [0, 1])
+        self.assertEqual(layer(inputs_values=[-1, 1]), [0, 1])
 
         layer = Layer(neuron_inputs_number=2, neurons_number=4)
         neurons_weights = [[-1, 1, 1], [1, -1, 1], [-1, 1, -1], [1, 1, 1]]
         for neuron, new_weights in zip(layer.neurons, neurons_weights):
             neuron.weights = new_weights
-        resoult = layer(inputs_values=[-1, 1])
-        self.assertEqual(resoult, [0, 1, 0, 1])
+        self.assertEqual(layer(inputs_values=[-1, 1]), [0, 1, 0, 1])
+
+    def test_Layer_add_neuron(self):
+        layer = Layer(neuron_inputs_number=2, neurons_number=1)
+        self.assertEqual(len(layer.neurons), 1)
+        layer._add_neuron()
+        self.assertEqual(len(layer.neurons), 2)
+        self.assertEqual(
+            first=len(layer.neurons[0].weights),
+            second=len(layer.neurons[1].weights),
+        )
 
 
 if __name__ == '__main__':
