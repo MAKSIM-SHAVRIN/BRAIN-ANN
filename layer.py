@@ -3,6 +3,10 @@ from neuron import Neuron
 
 class Layer:
     def __init__(self, neuron_inputs_number: int, neurons_number: int):
+        if neuron_inputs_number < 2:
+            raise ValueError('Neuron must have at least two non-bias inputs')
+        if neurons_number < 2:
+            raise ValueError('Layer must have at least two neurons')
         self.neurons = []
         for _ in range(neurons_number):
             self.neurons.append(Neuron(neuron_inputs_number))
