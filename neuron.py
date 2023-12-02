@@ -22,16 +22,16 @@ class Neuron:
 
     def __call__(self, inputs_values: list[int]) -> int:
         # Add bias is always 1
-        inputs_values.insert(0, 1)
+        inputs = [1,] + inputs_values
 
         # Product inputs values on due weights
-        arrays_product = count_arrays_product(self.weights, inputs_values)
+        arrays_product = count_arrays_product(self.weights, inputs)
 
         # Sum all values
-        neuron_sum = sum(arrays_product)
+        weighted_sum = sum(arrays_product)
 
         # Use activation function to get neuron output
-        return heaviside(neuron_sum)
+        return heaviside(weighted_sum)
 
     def __repr__(self):
         return f'\n< Neuron with weights: {self.weights} >'
