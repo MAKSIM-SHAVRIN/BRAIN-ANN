@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 
 from neuron import Neuron, count_arrays_product
+from layer import Layer
 
 
 class NeuronTestCase(TestCase):
@@ -62,6 +63,21 @@ class NeuronTestCase(TestCase):
 
         with self.assertRaises(expected_exception=PermissionError):
             neuron._delete_weight(weight_number=1)
+
+
+class LayerTestCase(TestCase):
+    def test_Layer__init__(self):
+        layer = Layer(neuron_inputs_number=7, neurons_number=9)
+        self.assertEqual(len(layer.neurons), 9)
+        for neuron in layer.neurons:
+            self.assertEqual(len(neuron.weights), 8)
+
+    def test_Layer__init__wrong_arguments(self):
+        with self.assertRaises(ValueError):
+            Layer(neuron_inputs_number=3, neurons_number=1)
+
+        with self.assertRaises(ValueError):
+            Layer(neuron_inputs_number=1, neurons_number=3)
 
 
 if __name__ == '__main__':
