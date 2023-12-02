@@ -55,6 +55,14 @@ class NeuronTestCase(TestCase):
         neuron._delete_weight(weight_number=0)
         self.assertEqual(neuron.weights, [-1, 1, -1])
 
+    def test_Neuron_delete_weight_over_minimal(self):
+        neuron = Neuron(inputs_number=3)
+
+        neuron._delete_weight(weight_number=1)
+
+        with self.assertRaises(expected_exception=PermissionError):
+            neuron._delete_weight(weight_number=1)
+
 
 if __name__ == '__main__':
     main()
