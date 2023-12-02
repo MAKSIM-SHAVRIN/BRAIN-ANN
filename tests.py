@@ -79,6 +79,14 @@ class LayerTestCase(TestCase):
         with self.assertRaises(ValueError):
             Layer(neuron_inputs_number=1, neurons_number=3)
 
+    def test_Layer__call__(self):
+        layer = Layer(neuron_inputs_number=2, neurons_number=2)
+        neurons_weights = [[-1, 1, 1], [1, -1, 1]]
+        for neuron, new_weights in zip(layer.neurons, neurons_weights):
+            neuron.weights = new_weights
+        resoult = layer(inputs_values=[-1, 1])
+        self.assertEqual(resoult, [0, 1])
+
 
 if __name__ == '__main__':
     main()
