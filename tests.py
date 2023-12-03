@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 
-from neuron import Neuron, count_arrays_product
 from layer import Layer
+from neuron import Neuron, count_arrays_product
 
 
 class NeuronTestCase(TestCase):
@@ -101,6 +101,24 @@ class LayerTestCase(TestCase):
             first=len(layer.neurons[0].weights),
             second=len(layer.neurons[1].weights),
         )
+
+    def test_Layer_insert_neuron(self):
+        layer = Layer(neuron_inputs_number=2, neurons_number=3)
+        neuron_0 = layer.neurons[0]
+        neuron_1 = layer.neurons[1]
+        neuron_2 = layer.neurons[2]
+        layer._insert_neuron(index=2)
+        self.assertEqual(len(layer.neurons), 4)
+
+        self.assertIs(neuron_0, layer.neurons[0])
+        self.assertIs(neuron_1, layer.neurons[1])
+        self.assertIs(neuron_2, layer.neurons[3])
+
+    def test_Laye_add_weights(self):
+        pass
+
+    def test_Laye_delete_weights(self):
+        pass
 
 
 if __name__ == '__main__':
