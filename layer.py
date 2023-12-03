@@ -29,6 +29,6 @@ class Layer:
         for neuron in self.neurons:
             neuron._add_weight()
 
-    def _delete_weights(self, weight_number: int):
+    def _delete_weights(self, index: int):
         for neuron in self.neurons:
-            neuron._delete_weight(weight_number)
+            neuron._delete_weight(index)
