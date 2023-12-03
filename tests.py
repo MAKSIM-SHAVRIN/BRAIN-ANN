@@ -2,6 +2,7 @@ from unittest import TestCase, main
 
 from layer import Layer
 from neuron import Neuron, count_arrays_product
+from perceptron import Perceptron
 
 
 class NeuronTestCase(TestCase):
@@ -139,6 +140,17 @@ class LayerTestCase(TestCase):
 
         for neuron in layer.neurons:
             self.assertEqual(len(neuron.weights), 3)
+
+
+class PerceptronTestCase(TestCase):
+    def test_Perceptron__init__(self):
+        structure = [2, 3, 10, 1]
+        perceptron = Perceptron(structure)
+        self.assertEqual(len(perceptron.layers), len(structure) - 1)
+        for index, layer in enumerate(perceptron.layers):
+            self.assertEqual(len(layer.neurons), structure[index + 1])
+            for neuron in layer.neurons:
+                self.assertEqual(len(neuron.weights), structure[index] + 1)
 
 
 if __name__ == '__main__':
