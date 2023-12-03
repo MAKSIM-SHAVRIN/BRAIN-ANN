@@ -107,6 +107,7 @@ class LayerTestCase(TestCase):
         neuron_0 = layer.neurons[0]
         neuron_1 = layer.neurons[1]
         neuron_2 = layer.neurons[2]
+
         layer._insert_neuron(index=2)
         self.assertEqual(len(layer.neurons), 4)
 
@@ -114,8 +115,14 @@ class LayerTestCase(TestCase):
         self.assertIs(neuron_1, layer.neurons[1])
         self.assertIs(neuron_2, layer.neurons[3])
 
+        for neuron in layer.neurons:
+            self.assertEqual(len(neuron.weights), 3)
+
     def test_Laye_add_weights(self):
-        pass
+        layer = Layer(neuron_inputs_number=10, neurons_number=3)
+        layer._add_weights()
+        for neuron in layer.neurons:
+            self.assertEqual(len(neuron.weights), 12)
 
     def test_Laye_delete_weights(self):
         pass
