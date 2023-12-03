@@ -39,10 +39,11 @@ class Neuron:
     def _add_weight(self):
         self.weights.append(choice((-1, 1,)))
 
-    def _delete_weight(self, weight_number: int):
-        if len(self.weights) < 4:
+    def _delete_weight(self, index: int):
+        if len(self.weights) <= 3:
             raise PermissionError(
-                'Can`t delete cuz Neuron must have atleast two non-bias inputs'
+                'Can`t delete, cuz every Neuron must have two non-bias inputs'
             )
-        # add 1 to index remembering about bias weights
-        self.weights.pop(weight_number + 1)
+        if index == 0:
+            raise PermissionError('Can`t delete bias input')
+        self.weights.pop(index)
