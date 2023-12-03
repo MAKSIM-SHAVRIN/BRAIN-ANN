@@ -125,7 +125,20 @@ class LayerTestCase(TestCase):
             self.assertEqual(len(neuron.weights), 12)
 
     def test_Laye_delete_weights(self):
-        pass
+        layer = Layer(neuron_inputs_number=3, neurons_number=3)
+        neuron = layer.neurons[0]
+
+        bias_weight = neuron.weights[0]
+        weight_1 = neuron.weights[1]
+        weight_3 = neuron.weights[3]
+
+        layer._delete_weights(weight_number=2)
+        self.assertEqual(bias_weight, neuron.weights[0])
+        self.assertEqual(weight_1, neuron.weights[1])
+        self.assertEqual(weight_3, neuron.weights[2])
+
+        for neuron in layer.neurons:
+            self.assertEqual(len(neuron.weights), 3)
 
 
 if __name__ == '__main__':
