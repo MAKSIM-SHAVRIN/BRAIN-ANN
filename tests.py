@@ -51,19 +51,20 @@ class NeuronTestCase(TestCase):
         neuron = object.__new__(Neuron)
         neuron.weights = [-1, 1, -1, 1, -1]
 
-        neuron._delete_weight(weight_number=1)
+        neuron._delete_weight(index=2)
         self.assertEqual(neuron.weights, [-1, 1, 1, -1])
 
-        neuron._delete_weight(weight_number=0)
+        neuron._delete_weight(index=1)
         self.assertEqual(neuron.weights, [-1, 1, -1])
 
     def test_Neuron_delete_weight_over_minimal(self):
         neuron = Neuron(inputs_number=3)
-
-        neuron._delete_weight(weight_number=1)
-
         with self.assertRaises(expected_exception=PermissionError):
-            neuron._delete_weight(weight_number=1)
+            neuron._delete_weight(index=0)
+
+        neuron._delete_weight(index=1)
+        with self.assertRaises(expected_exception=PermissionError):
+            neuron._delete_weight(index=1)
 
 
 class LayerTestCase(TestCase):
@@ -126,24 +127,29 @@ class LayerTestCase(TestCase):
             self.assertEqual(len(neuron.weights), 12)
 
     def test_Laye_delete_weights(self):
-        layer = Layer(neuron_inputs_number=3, neurons_number=3)
+        neuron_inputs_number = 12
+        layer = Layer(neuron_inputs_number, neurons_number=3)
         neuron = layer.neurons[0]
 
         bias_weight = neuron.weights[0]
-        weight_1 = neuron.weights[1]
+        weight_2 = neuron.weights[2]
         weight_3 = neuron.weights[3]
 
-        layer._delete_weights(weight_number=2)
+        layer._delete_weights(index=1)
         self.assertEqual(bias_weight, neuron.weights[0])
-        self.assertEqual(weight_1, neuron.weights[1])
+        self.assertEqual(weight_2, neuron.weights[1])
         self.assertEqual(weight_3, neuron.weights[2])
 
         for neuron in layer.neurons:
-            self.assertEqual(len(neuron.weights), 3)
+            self.assertEqual(len(neuron.weights), neuron_inputs_number)
 
 
 class PerceptronTestCase(TestCase):
     def test_Perceptron__init__(self):
+        structure = [3, 3]
+        with self.assertRaises(ValueError):
+            perceptron = Perceptron(structure)
+
         structure = [2, 3, 10, 1]
         perceptron = Perceptron(structure)
         self.assertEqual(len(perceptron.layers), len(structure) - 1)
@@ -151,6 +157,11 @@ class PerceptronTestCase(TestCase):
             self.assertEqual(len(layer.neurons), structure[index + 1])
             for neuron in layer.neurons:
                 self.assertEqual(len(neuron.weights), structure[index] + 1)
+
+    def test_Perceptron_structure(self):
+        structures = [[2, 2, 1], [2, 3, 10, 1], [17, 10, 67, 4], [3, 3, 3, 1]]
+        for structure in structures:
+            self.assertEqual(Perceptron(structure).structure, structure)
 
 
 if __name__ == '__main__':
