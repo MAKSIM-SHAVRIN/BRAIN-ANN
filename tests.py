@@ -163,6 +163,9 @@ class PerceptronTestCase(TestCase):
         for structure in structures:
             self.assertEqual(Perceptron(structure).structure, structure)
 
+    def test_Perceptron__call__(self):
+        return
+
 
 if __name__ == '__main__':
     main()

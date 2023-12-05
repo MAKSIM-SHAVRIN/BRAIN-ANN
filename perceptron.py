@@ -4,7 +4,7 @@ from layer import Layer
 
 
 class Perceptron:
-    def __init__(self, structure: list):
+    def __init__(self, structure: list[int]):
         if len(structure) <= 2:
             raise ValueError('Perceptron must have at least 2 layers')
         # first layer (index=0) of the structure isn't a true layer,
@@ -14,7 +14,7 @@ class Perceptron:
             self.layers.append(Layer(structure[layer_number], neurons_number))
 
     @property
-    def structure(self) -> list:
+    def structure(self) -> list[int]:
         structure = list()
         for number, layer in enumerate(self.layers):
             if number == 0:
@@ -22,7 +22,7 @@ class Perceptron:
             structure.append(len(layer.neurons))
         return structure
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'< Perceptron: {self.structure} >'
 
     def __call__(self, inputs_values: list[int]) -> list[int]:
