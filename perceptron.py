@@ -18,6 +18,8 @@ class Perceptron:
     @classmethod
     def init_with_weights(cls, structure: list[int], weights: list[int]):
         perceptron = cls(structure)
+        if len(perceptron.all_weights) != len(weights):
+            raise ValueError('Wrong weights number')
         for neuron in perceptron.all_neurons:
             weights_number = len(neuron.weights)
             neuron.weights = weights[:weights_number]
