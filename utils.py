@@ -1,8 +1,6 @@
 from functools import wraps
 from time import time
 
-from jaro import jaro_winkler_metric
-
 
 UNICODE_RANGES = [
     (0x0020, 0x007E),  # ASCII punctuation and symbols, digits, latin
