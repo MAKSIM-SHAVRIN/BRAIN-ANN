@@ -60,6 +60,9 @@ def get_element_by_adress(sequence, adress: list[int]):
     index = int(round((len(sequence) - 1) * fraction))
     return sequence[index]
 
+def check_dir_path_slash_ending(dir_path: str):
+    if dir_path[-1] != '/':
+        raise ValueError("Directory path must ending with `/`")
 
 def make_simple_structure(
     inputs_number: int, intermediate_layers_number: int,
