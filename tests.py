@@ -3,6 +3,7 @@ from unittest import TestCase, main
 from layer import Layer
 from neuron import Neuron, count_arrays_product
 from perceptron import Perceptron
+from recurrent import Recurrent
 
 
 class NeuronTestCase(TestCase):
@@ -180,7 +181,16 @@ class PerceptronTestCase(TestCase):
         weights = [1, -1, 1, 1, 1, 1, -1, 1, 1, 1, -1, -1]
         perceptron = Perceptron.init_with_weights(structure, weights)
         self.assertEqual(perceptron([0, 1]), [1, 0])
-            
+
+
+class RecurrentTestCase(TestCase):
+    def test_Recurrent__init__(self):
+        with self.assertRaises(ValueError):
+            Recurrent(inputs_number=0, outputs_number=7)
+        with self.assertRaises(ValueError):
+            Recurrent(inputs_number=12, outputs_number=0)
+        self.assertEqual(Recurrent().structure, [26, *6*[10], 334])
+
 
 if __name__ == '__main__':
     main()
