@@ -1,9 +1,11 @@
 from json import dump, load
+from pathlib import Path
 from time import time
 
 from perceptron import Perceptron
-from utils import (conv_int_to_list, dict_sum, get_element_by_adress,
-                   get_index_by_adress, split_by_volumes)
+from utils import (check_dir_path_slash_ending, conv_int_to_list, dict_sum,
+                   get_element_by_adress, get_index_by_adress,
+                   split_by_volumes)
 
 
 class Recurrent(Perceptron):
@@ -83,15 +85,16 @@ class Recurrent(Perceptron):
                 perceptron_outputs_number,
             ],
         )
-        return None
+        return None  # Added for visual end of the method
 
     def save(self, dir_path: str, file_name: str) -> str:
+        check_dir_path_slash_ending(dir_path)
         file = dir_path + file_name + '.recurrent'
         with open(file, mode='w', encoding='ascii') as filebuffer:
             dump(
                 obj=dict(
-                    signifying_inputs_number=self.signifying_inputs_number,
-                    signifying_outputs_number=self.signifying_outputs_number,
+                    inputs_number=self.inputs_number,
+                    outputs_number=self.outputs_number,
                 ),
                 fp=filebuffer,
             )
@@ -100,16 +103,15 @@ class Recurrent(Perceptron):
 
     @classmethod
     def load(cls, file: str):
-        with open(file=file, mode='r', encoding='ascii') as filebuffer:
-            dctnry = load(fp=filebuffer)
-        perceptron = super().load(file=f'{file}.perceptron')
+        with open(file, mode='r', encoding='ascii') as filebuffer:
+            dictionary = load(fp=filebuffer)
+        dir_path_and_name = Path(file).parent + '/' + Path(file).stem
+        perceptron = super().load(file=f'{dir_path_and_name}.perceptron')
 
-        recurrent = cls.__new__(cls)
+        recurrent = object.__new__(cls)
         recurrent.layers = perceptron.layers
-        recurrent\
-            .signifying_inputs_number = dctnry['signifying_inputs_number']
-        recurrent\
-            .signifying_outputs_number = dctnry['signifying_outputs_number']
+        recurrent.inputs_number = dictionary['inputs_number']
+        recurrent.outputs_number = dictionary['outputs_number']
         return recurrent
 
     @property

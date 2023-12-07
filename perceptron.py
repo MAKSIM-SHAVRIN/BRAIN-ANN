@@ -1,8 +1,10 @@
 from itertools import chain
 from json import dump, load
+from pathlib import Path
 
 from layer import Layer
 from neuron import Neuron  # Imported for annotation
+from utils import check_dir_path_slash_ending
 
 
 class Perceptron:
@@ -45,6 +47,7 @@ class Perceptron:
         return resoults
 
     def save(self, dir_path: str, file_name: str) -> str:
+        check_dir_path_slash_ending(dir_path)
         file = dir_path + file_name + '.perceptron'
         with open(file, mode='w', encoding='ascii') as filebuffer:
             dump(
@@ -55,7 +58,7 @@ class Perceptron:
 
     @classmethod
     def load(cls, file: str):
-        with open(file=file, mode='r', encoding='ascii') as filebuffer:
+        with open(file, mode='r', encoding='ascii') as filebuffer:
             dictionary = load(fp=filebuffer)
         structure = dictionary['structure']
         weights = dictionary['weights']
