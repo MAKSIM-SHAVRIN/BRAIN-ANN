@@ -44,8 +44,9 @@ class Perceptron:
             resoults = layer(resoults)
         return resoults
 
-    def save(self, file: str) -> str:
-        with open(file=file, mode='w', encoding='ascii') as filebuffer:
+    def save(self, dir_path: str, file_name: str) -> str:
+        file = dir_path + file_name + '.perceptron'
+        with open(file, mode='w', encoding='ascii') as filebuffer:
             dump(
                 obj=dict(structure=self.structure, weights=self.all_weights),
                 fp=filebuffer,
