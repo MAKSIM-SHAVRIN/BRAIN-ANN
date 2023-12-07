@@ -1,6 +1,8 @@
+from itertools import chain
 from json import dump, load
 
 from layer import Layer
+from neuron import Neuron  # Imported for annotation
 
 
 class Perceptron:
@@ -12,6 +14,15 @@ class Perceptron:
         self.layers = list()
         for layer_number, neurons_number in enumerate(structure[1:]):
             self.layers.append(Layer(structure[layer_number], neurons_number))
+
+    @classmethod
+    def init_with_weights(cls, structure: list[int], weights: list[int]):
+        perceptron = cls(structure)
+        for neuron in perceptron.all_neurons:
+            weights_number = len(neuron.weights)
+            neuron.weights = weights[:weights_number]
+            weights = weights[weights_number:]
+        return perceptron
 
     @property
     def structure(self) -> list[int]:
@@ -43,28 +54,18 @@ class Perceptron:
     def load(cls, file: str):
         with open(file=file, mode='r', encoding='ascii') as filebuffer:
             dictionary = load(fp=filebuffer)
-        perceptron = cls(structure=dictionary['structure'])
+        structure = dictionary['structure']
         weights = dictionary['weights']
-        for neuron in perceptron.all_neurons:
-            weights_number = len(neuron.weights)
-            neuron.weights = weights[:weights_number]
-            weights = weights[weights_number:]
-        return perceptron
+        return cls.init_with_weights(structure, weights)
 
     @property
     def weights_number(self) -> int:
         return len(self.all_weights)
 
     @property
-    def all_weights(self) -> list:
-        weights = list()
-        for neuron in self.all_neurons:
-            weights.extend(neuron.weights)
-        return weights
+    def all_neurons(self) -> list[Neuron]:
+        return list(chain(*[layer.neurons for layer in self.layers]))
 
     @property
-    def all_neurons(self) -> list:
-        neurons = list()
-        for layer in self.layers:
-            neurons.extend(layer.neurons)
-        return neurons
+    def all_weights(self) -> list[int]:
+        return list(chain(*[neuron.weights for neuron in self.all_neurons]))
