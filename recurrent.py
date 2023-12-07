@@ -7,22 +7,28 @@ from utils import (conv_int_to_list, dict_sum, get_element_by_adress,
 
 
 class Recurrent(Perceptron):
-    # Signals
+    # Controlling signals
     STOP_SIGNAL = [0, 0, 1]
     SKIP_SIGNAL = [0, 1, 0]
     REPEAT_SIGNAL = [1, 0, 0]
     STOP_REFLECTIONS_SIGNAL = [1, 1, 1]
     NOTHING_SIGNAL = [0, 0, 0]
 
+    # Transforming signals
     ADD_NEURON_SIGNAL = [1, 0, 0]
     DELETE_NEURON_SIGNAL = [0, 1, 1]
 
     ADD_WRITTING_MEMORY_SIGNAL = [0, 0, 1]
     DELETE_WRITTING_MEMORY_SIGNAL = [1, 1, 0]
+
     ADD_READING_MEMORY_SIGNAL = [1, 0, 1]
     DELETE_READING_MEMORY_SIGNAL = [0, 1, 0]
 
     # Net structure
+    INITIAL_MIDDLE_LAYERS_STRUCTURE: list = 6*[10]
+    INITIAL_WRITING_MEMORY_CELLS_NUMBER: int = 5
+    INITIAL_READING_MEMORY_CELLS_NUMBER: int = 5
+
     MEMORY_CELL_STRUCTURE = dict(
         layer_adress=10,
         neuron_adress=10,
@@ -37,44 +43,51 @@ class Recurrent(Perceptron):
     TIME_INPUTS_NUMBER: int = 5
     REFLECTIONS_INPUTS_NUMBER: int = 8
 
-    def __init__(
-        self,
-        signifying_inputs_number: int = 8, signifying_outputs_number: int = 8,
-        middle_layers_structure: list = 6*[10],
-        writing_memory_cells_number: int = 5,
-        reading_memory_cells_number: int = 5,
-    ):
-        self.signifying_inputs_number = signifying_inputs_number
-        self.signifying_outputs_number = signifying_outputs_number
+    def __init__(self, inputs_number: int = 8, outputs_number: int = 8):
+        if inputs_number < 1:
+            raise ValueError('Recurrent must have at least one input')
+        if outputs_number < 1:
+            raise ValueError('Recurrent must have at least one output')
 
-        memory_cell_neurons_number = dict_sum(self.MEMORY_CELL_STRUCTURE)
-        writing_memory_neurons_number = writing_memory_cells_number\
-            * memory_cell_neurons_number
-        reading_memory_neurons_number = reading_memory_cells_number\
-            * memory_cell_neurons_number
-        inputs_number = dict_sum(
+        self.inputs_number = inputs_number
+        self.outputs_number = outputs_number
+
+        perceptron_inputs_number = dict_sum(
             dict(
-                signifying_inputs=self.signifying_inputs_number,
+                signifying_inputs=self.inputs_number,
                 time_inputs=self.TIME_INPUTS_NUMBER,
                 reflections_counter_inputs=self.REFLECTIONS_INPUTS_NUMBER,
-                reading_memory_inputs=reading_memory_neurons_number,
+                reading_memory_inputs=self.INITIAL_READING_MEMORY_CELLS_NUMBER,
             ),
         )
-        outputs_number = dict_sum(
+
+        memory_cell_neurons_number = dict_sum(self.MEMORY_CELL_STRUCTURE)
+        w_memory_neurons_number = self.INITIAL_WRITING_MEMORY_CELLS_NUMBER\
+            * memory_cell_neurons_number
+        r_memory_neurons_number = self.INITIAL_READING_MEMORY_CELLS_NUMBER\
+            * memory_cell_neurons_number
+
+        perceptron_outputs_number = dict_sum(
             dict(
-                signifying_outputs=self.signifying_outputs_number,
+                signifying_outputs=self.outputs_number,
                 signal_neurons=self.SIGNAL_NEURONS_NUMBER,
                 reforming_neurons=dict_sum(self.REFORMING_NEURONS_STRUCTURE),
-                writing_memory_neurons=writing_memory_neurons_number,
-                reading_memory_neurons=reading_memory_neurons_number,
-            )
+                writing_memory_neurons=w_memory_neurons_number,
+                reading_memory_neurons=r_memory_neurons_number,
+            ),
         )
         super().__init__(
-            [inputs_number, *middle_layers_structure, outputs_number],
+            [
+                perceptron_inputs_number,
+                *self.INITIAL_MIDDLE_LAYERS_STRUCTURE,
+                perceptron_outputs_number,
+            ],
         )
+        return None
 
-    def save(self, file: str):
-        with open(file=file, mode='w', encoding='ascii') as filebuffer:
+    def save(self, dir_path: str, file_name: str) -> str:
+        file = dir_path + file_name + '.recurrent'
+        with open(file, mode='w', encoding='ascii') as filebuffer:
             dump(
                 obj=dict(
                     signifying_inputs_number=self.signifying_inputs_number,
@@ -82,7 +95,8 @@ class Recurrent(Perceptron):
                 ),
                 fp=filebuffer,
             )
-        super().save(file=f'{file}.perceptron')
+        super().save(dir_path, file_name)
+        return file
 
     @classmethod
     def load(cls, file: str):
