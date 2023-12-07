@@ -61,10 +61,6 @@ class Perceptron:
         return cls.init_with_weights(structure, weights)
 
     @property
-    def weights_number(self) -> int:
-        return len(self.all_weights)
-
-    @property
     def all_neurons(self) -> list[Neuron]:
         return list(chain(*[layer.neurons for layer in self.layers]))
 
