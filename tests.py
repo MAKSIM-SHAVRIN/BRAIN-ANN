@@ -158,14 +158,27 @@ class PerceptronTestCase(TestCase):
             for neuron in layer.neurons:
                 self.assertEqual(len(neuron.weights), structure[index] + 1)
 
+    def test_Perceptron_init_with_weights(self):
+        structure  = [2, 2, 2]
+        weights = [1, -1, 1, 1, 1, 1, -1, 1, 1, 1, -1, -1]
+        perceptron = Perceptron.init_with_weights(structure, weights)
+        real_weights = list()
+        for layer in perceptron.layers:
+            for neuron in layer.neurons:
+                real_weights.extend(neuron.weights)
+        self.assertEqual(weights, real_weights)
+
     def test_Perceptron_structure(self):
         structures = [[2, 2, 1], [2, 3, 10, 1], [17, 10, 67, 4], [3, 3, 3, 1]]
         for structure in structures:
             self.assertEqual(Perceptron(structure).structure, structure)
 
     def test_Perceptron__call__(self):
-        return
-
+        structure  = [2, 2, 2]
+        weights = [1, -1, 1, 1, 1, 1, -1, 1, 1, 1, -1, -1]
+        perceptron = Perceptron.init_with_weights(structure, weights)
+        self.assertEqual(perceptron([0, 1]), [1, 0])
+            
 
 if __name__ == '__main__':
     main()
