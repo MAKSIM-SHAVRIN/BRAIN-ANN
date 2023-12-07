@@ -161,6 +161,8 @@ class PerceptronTestCase(TestCase):
     def test_Perceptron_init_with_weights(self):
         structure  = [2, 2, 2]
         weights = [1, -1, 1, 1, 1, 1, -1, 1, 1, 1, -1, -1]
+        with self.assertRaises(ValueError):
+            perceptron = Perceptron.init_with_weights(structure, weights[:-2])
         perceptron = Perceptron.init_with_weights(structure, weights)
         real_weights = list()
         for layer in perceptron.layers:
