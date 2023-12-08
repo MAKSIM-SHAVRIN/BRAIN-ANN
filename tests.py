@@ -4,6 +4,15 @@ from layer import Layer
 from neuron import Neuron, count_arrays_product
 from perceptron import Perceptron
 from recurrent import Recurrent
+from utils import (check_dir_path_slash_ending, conv_int_to_list,
+                   conv_list_to_int, dict_sum, get_element_by_adress,
+                   get_index_by_adress, get_unicode_characters_by_ranges,
+                   make_simple_structure, mean, measure_execution_time, mix_in,
+                   split_by_evenodd_position, split_by_volumes)
+
+
+class UtilsTestCase(TestCase):
+    pass
 
 
 class NeuronTestCase(TestCase):
