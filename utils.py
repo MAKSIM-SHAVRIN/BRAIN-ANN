@@ -8,12 +8,23 @@ UNICODE_RANGES = [
 ]
 
 
-def split_by_volumes(list_for_split: list, volumes: list[int]):
+def split_by_volumes(list_for_split: list, volumes: list[int]) -> list[list]:
+    if len(list_for_split) < 2:
+        raise ValueError('Must contain at least two objects to be splittied')
+    if len(volumes) < 2:
+        raise ValueError('Must contain at least two splitting volumes')
+    if len(list_for_split) < len(volumes):
+        # You can`t split a coin to two stacks
+        raise ValueError(
+            'list_for_split length must be longer or equal to volumes length',
+        )
     resoult_lists = list()
     for volume in volumes:
         resoult_lists.append(list_for_split[:volume])
         list_for_split = list_for_split[volume:]
-    resoult_lists.append(list_for_split)
+    # Add the rest of splited list if it is
+    if list_for_split:
+        resoult_lists.append(list_for_split)
     return resoult_lists
 
 
@@ -23,10 +34,6 @@ def get_unicode_characters_by_ranges(ranges: list[tuple]) -> str:
         for number in range(start, finish + 1):
             string_characters.append(chr(number))
     return ''.join(string_characters)
-
-
-def jaro_loss(string1, string2):
-    return 1 - jaro_winkler_metric(string1, string2)
 
 
 def mean(sequence) -> float:
@@ -46,7 +53,7 @@ def conv_int_to_list(number: int, width: int) -> list[int]:
     return rjust_len * [0] + list(reversed(resoult_list))
 
 
-def conv_list_to_int(binaries_list: list) -> int:
+def conv_list_to_int(binaries_list: list[int]) -> int:
     return sum([n*2**p for p, n in enumerate(reversed(binaries_list))])
 
 
@@ -67,7 +74,7 @@ def check_dir_path_slash_ending(dir_path: str):
 def make_simple_structure(
     inputs_number: int, intermediate_layers_number: int,
     intermediate_layers_neurons_number: int, outputs_number: int,
-) -> list:
+) -> list[int]:
     resoult_structure = [inputs_number]
     for _item in range(intermediate_layers_number):
         resoult_structure.append(intermediate_layers_neurons_number)
@@ -85,8 +92,8 @@ def measure_execution_time(procedure):
     return _wrapper
 
 
-def mix_in(*mixins):
-    def decorator(class_be_decorated):
+def mix_in(*mixins: type):
+    def decorator(class_be_decorated: type):
         for mixin in mixins:
             for key, value in mixin.__dict__.items():
                 if callable(value) or isinstance(value, classmethod):
