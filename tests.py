@@ -33,24 +33,19 @@ class UtilsTestCase(TestCase):
         )
 
     def test_get_unicode_characters_by_ranges(self):
+        ranges = [(0x0020, 0x0026), (0x0400, 0x0408)]
         self.assertEqual(
-            first=get_unicode_characters_by_ranges(
-                [(0x0020, 0x0026), (0x0400, 0x0408)]
-            ),
+            first=get_unicode_characters_by_ranges(ranges),
             second=' !"#$%&ЀЁЂЃЄЅІЇЈ',
         )
         self.assertEqual(
-            first=len(
-                get_unicode_characters_by_ranges(
-                    [(0x0020, 0x0026), (0x0400, 0x0408)]
-                ),
-            ),
+            first=len(get_unicode_characters_by_ranges(ranges)),
             second=16,
         )
+
+        ranges = [(0x0408, 0x0400), (0x0020, 0x0026)]
         with self.assertRaises(ValueError):
-            get_unicode_characters_by_ranges(
-                [(0x0408, 0x0400), (0x0020, 0x0026)],
-            )
+            get_unicode_characters_by_ranges(ranges)
 
 
 class NeuronTestCase(TestCase):
