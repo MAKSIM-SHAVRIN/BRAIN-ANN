@@ -12,8 +12,25 @@ from utils import (check_dir_path_slash_ending, conv_int_to_list,
 
 
 class UtilsTestCase(TestCase):
-    pass
+    def test_split_by_volumes_wrong_args(self):
+        with self.assertRaises(ValueError):
+            split_by_volumes([50], [3, 1])
+        with self.assertRaises(ValueError):
+            split_by_volumes([10, 1, 4, 16, 8], [3])
+        with self.assertRaises(ValueError):
+            split_by_volumes([10, 1, 4, 16, 8], [2, 3, 0])
+        with self.assertRaises(ValueError):
+            split_by_volumes([10, 1, 4, 0, 16, 8], [2, 3, 2])
 
+    def test_split_by_volumes(self):
+        self.assertEqual(
+            first=split_by_volumes([10, 1, 4, 0, 16, 8], [2, 3, 1]),
+            second=[[10, 1], [4, 0, 16], [8]],
+        )
+        self.assertEqual(
+            first=split_by_volumes([10, 1, 4, 0, 16, 8], [3, 2]),
+            second=[[10, 1, 4], [0, 16], [8]],
+        )
 
 class NeuronTestCase(TestCase):
     def test_count_arrays_product(self):
