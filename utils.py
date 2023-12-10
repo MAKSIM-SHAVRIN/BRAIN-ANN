@@ -35,8 +35,8 @@ def split_by_volumes(list_for_split: list, volumes: list[int]) -> list[list]:
 def get_unicode_characters_by_ranges(ranges: list[tuple[int]]) -> str:
     string_characters = list()
     for start, finish in ranges:
-        if finish > start:
-            raise ValueError('Finish value of range is bigger thn start value')
+        if finish < start:
+            raise ValueError('Start value of range is bigger thn finish value')
         for number in range(start, finish + 1):
             string_characters.append(chr(number))
     return ''.join(string_characters)
