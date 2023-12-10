@@ -42,11 +42,29 @@ class UtilsTestCase(TestCase):
             first=len(get_unicode_characters_by_ranges(ranges)),
             second=16,
         )
-
         ranges = [(0x0408, 0x0400), (0x0020, 0x0026)]
         with self.assertRaises(ValueError):
             get_unicode_characters_by_ranges(ranges)
 
+    def test_mean(self):
+        with self.assertRaises(ValueError):
+            mean([10])
+        with self.assertRaises(ValueError):
+            mean([])
+        self.assertEqual(mean((8, 6, 16)), 10)
+
+    def test_dict_sum(self):
+        with self.assertRaises(ValueError):
+            dict_sum(dict())
+        with self.assertRaises(ValueError):
+            dict_sum(dict(A=10))
+        self.assertEqual(
+            first=dict_sum(dict(A=50, B=27, C=23, D=1)),
+            second=101,
+        )
+
+    def conv_int_to_list(self):
+        self.assertEqual
 
 class NeuronTestCase(TestCase):
     def test_count_arrays_product(self):
