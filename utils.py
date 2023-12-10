@@ -54,12 +54,14 @@ def dict_sum(dictionary_of_numbers: dict):
     return sum(dictionary_of_numbers.values())
 
 
-def conv_int_to_list(number: int, width: int) -> list[int]:
+def conv_int_to_list(number: int, length: int) -> list[int]:
     resoult_list = list()
     while number != 0:
         number, modulo = divmod(number, 2)
         resoult_list.append(modulo)
-    rjust_len = width - len(resoult_list)
+    rjust_len = length - len(resoult_list)
+    if rjust_len < 0:
+        raise ValueError('Resoult list length is bigger than length argument')
     return rjust_len * [0] + list(reversed(resoult_list))
 
 
