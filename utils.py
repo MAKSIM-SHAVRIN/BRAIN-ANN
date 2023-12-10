@@ -44,13 +44,13 @@ def get_unicode_characters_by_ranges(ranges: list[tuple[int]]) -> str:
 
 def mean(sequence) -> float:
     if len(sequence) < 2:
-        raise ValueError('Sequence must contain at least an element')
+        raise ValueError('Sequence must contain at least two elements')
     return sum(sequence) / len(sequence)
 
 
 def dict_sum(dictionary_of_numbers: dict):
     if len(dictionary_of_numbers) < 2:
-        raise ValueError('Dictionary must contain at least an element')
+        raise ValueError('Dictionary must contain at least two elements')
     return sum(dictionary_of_numbers.values())
 
 
@@ -73,10 +73,14 @@ def conv_list_to_int(binaries_list: list[int]) -> int:
 
 
 def get_index_by_adress(sequence, adress: list[int]) -> int:
+    if len(sequence) < 2:
+        raise ValueError('Sequence must contain at least two elements')
     fraction = conv_list_to_int(adress) / (2 ** len(adress) - 1)
     return int(round((len(sequence) - 1) * fraction))
 
 def get_element_by_adress(sequence, adress: list[int]):
+    if len(sequence) < 2:
+        raise ValueError('Sequence must contain at least two elements')
     return sequence[get_index_by_adress(sequence, adress)]
 
 def check_dir_path_slash_ending(dir_path: str):
