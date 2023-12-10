@@ -32,6 +32,23 @@ class UtilsTestCase(TestCase):
             second=[[10, 1, 4], [0, 16], [8]],
         )
 
+    def test_get_unicode_characters_by_ranges(self):
+        self.assertEqual(
+            first=get_unicode_characters_by_ranges(
+                [(0x0020, 0x0026), (0x0400, 0x0408)]
+            ),
+            second=' !"#$%&ЀЁЂЃЄЅІЇЈ',
+        )
+        self.assertEqual(
+            first=len(
+                get_unicode_characters_by_ranges(
+                    [(0x0020, 0x0026), (0x0400, 0x0408)]
+                ),
+            ),
+            second=16,
+        )
+
+
 class NeuronTestCase(TestCase):
     def test_count_arrays_product(self):
         self.assertEqual(
