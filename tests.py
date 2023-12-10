@@ -77,7 +77,33 @@ class UtilsTestCase(TestCase):
             second=50,
         )
         with self.assertRaises(ValueError):
-            conv_list_to_int(conv_list_to_int([0, 0, 0, 1, 9, 0, 0, 1, 0]))
+            conv_list_to_int([0, 0, 0, 1, 9, 0, 0, 1, 0])
+
+    def test_get_index_by_adress(self):
+        sequence=[2, 10, 5, 7, 33, 97, 8, 125]
+        self.assertEqual(
+            first=get_index_by_adress(sequence, adress=[0, 1, 0]),
+            second=2,
+        )
+        self.assertEqual(
+            first=get_index_by_adress(sequence, adress=[1, 1, 1]),
+            second=7,
+        )
+        with self.assertRaises(ValueError):
+            get_index_by_adress(sequence=[22], adress=[0])
+
+    def test_get_element_by_adress(self):
+        sequence=[2, 10, 5, 7, 33, 97, 8, 125]
+        self.assertEqual(
+            first=get_element_by_adress(sequence, adress=[0, 1, 0]),
+            second=5,
+        )
+        self.assertEqual(
+            first=get_element_by_adress(sequence, adress=[1, 0, 1]),
+            second=97,
+        )
+        with self.assertRaises(ValueError):
+            get_element_by_adress(sequence=[128], adress=[1, 0, 1])
 
 
 class NeuronTestCase(TestCase):
