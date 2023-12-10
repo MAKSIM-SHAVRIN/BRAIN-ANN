@@ -47,6 +47,10 @@ class UtilsTestCase(TestCase):
             ),
             second=16,
         )
+        with self.assertRaises(ValueError):
+            get_unicode_characters_by_ranges(
+                [(0x0408, 0x0400), (0x0020, 0x0026)],
+            )
 
 
 class NeuronTestCase(TestCase):
