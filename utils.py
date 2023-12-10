@@ -43,10 +43,14 @@ def get_unicode_characters_by_ranges(ranges: list[tuple[int]]) -> str:
 
 
 def mean(sequence) -> float:
+    if len(sequence) < 2:
+        raise ValueError('Sequence must contain at least an element')
     return sum(sequence) / len(sequence)
 
 
 def dict_sum(dictionary_of_numbers: dict):
+    if len(dictionary_of_numbers) < 2:
+        raise ValueError('Dictionary must contain at least an element')
     return sum(dictionary_of_numbers.values())
 
 
