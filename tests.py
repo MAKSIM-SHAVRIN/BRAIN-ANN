@@ -104,7 +104,10 @@ class UtilsTestCase(TestCase):
         )
         with self.assertRaises(ValueError):
             get_element_by_adress(sequence=[128], adress=[1, 0, 1])
-
+    
+    def check_dir_path_slash_ending(self):
+        with self.assertRaises(ValueError):
+            check_dir_path_slash_ending('/usr')
 
 class NeuronTestCase(TestCase):
     def test_count_arrays_product(self):
