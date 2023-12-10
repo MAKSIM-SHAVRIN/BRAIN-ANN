@@ -63,8 +63,14 @@ class UtilsTestCase(TestCase):
             second=101,
         )
 
-    def conv_int_to_list(self):
-        self.assertEqual
+    def test_conv_int_to_list(self):
+        self.assertEqual(
+            first=conv_int_to_list(50, 9),
+            second=[0, 0, 0, 1, 1, 0, 0, 1, 0],
+        )
+        with self.assertRaises(ValueError):
+            dict_sum(conv_int_to_list(50, 3))
+
 
 class NeuronTestCase(TestCase):
     def test_count_arrays_product(self):
