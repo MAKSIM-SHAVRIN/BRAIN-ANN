@@ -66,6 +66,9 @@ def conv_int_to_list(number: int, length: int) -> list[int]:
 
 
 def conv_list_to_int(binaries_list: list[int]) -> int:
+    for digit in binaries_list:
+        if digit not in [0, 1]:
+            raise ValueError('List must contain just zeros and ones')
     return sum([n*2**p for p, n in enumerate(reversed(binaries_list))])
 
 
