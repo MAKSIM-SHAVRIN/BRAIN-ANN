@@ -69,7 +69,15 @@ class UtilsTestCase(TestCase):
             second=[0, 0, 0, 1, 1, 0, 0, 1, 0],
         )
         with self.assertRaises(ValueError):
-            dict_sum(conv_int_to_list(50, 3))
+            conv_int_to_list(50, 3)
+
+    def test_conv_list_to_int(self):
+        self.assertEqual(
+            first=conv_list_to_int([0, 0, 0, 1, 1, 0, 0, 1, 0]),
+            second=50,
+        )
+        with self.assertRaises(ValueError):
+            conv_list_to_int(conv_list_to_int([0, 0, 0, 1, 9, 0, 0, 1, 0]))
 
 
 class NeuronTestCase(TestCase):
