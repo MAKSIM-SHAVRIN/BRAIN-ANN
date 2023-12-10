@@ -78,14 +78,17 @@ def get_index_by_adress(sequence, adress: list[int]) -> int:
     fraction = conv_list_to_int(adress) / (2 ** len(adress) - 1)
     return int(round((len(sequence) - 1) * fraction))
 
+
 def get_element_by_adress(sequence, adress: list[int]):
     if len(sequence) < 2:
         raise ValueError('Sequence must contain at least two elements')
     return sequence[get_index_by_adress(sequence, adress)]
 
+
 def check_dir_path_slash_ending(dir_path: str):
     if dir_path[-1] != '/':
         raise ValueError("Directory path must ending with `/`")
+
 
 def make_simple_structure(
     inputs_number: int, intermediate_layers_number: int,
