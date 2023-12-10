@@ -10,10 +10,14 @@ UNICODE_RANGES = [
 
 def split_by_volumes(list_for_split: list, volumes: list[int]) -> list[list]:
     if len(list_for_split) < 2:
-        raise ValueError('Must contain at least two objects to be splittied')
+        raise ValueError(
+            'list_for_split must contain at least two element to be splittied',
+        )
     if len(volumes) < 2:
-        raise ValueError('Must contain at least two splitting volumes')
-    if len(list_for_split) < len(volumes):
+        raise ValueError('volumes must contain at least two splitting values')
+    if 0 in volumes:
+        raise ValueError('Every resoult list must have an element at least')
+    if len(list_for_split) < sum(volumes):
         # You can`t split a coin to two stacks
         raise ValueError(
             'list_for_split length must be longer or equal to volumes length',
