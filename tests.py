@@ -1,3 +1,4 @@
+from time import time
 from unittest import TestCase, main
 
 from layer import Layer
@@ -104,10 +105,30 @@ class UtilsTestCase(TestCase):
         )
         with self.assertRaises(ValueError):
             get_element_by_adress(sequence=[128], adress=[1, 0, 1])
-    
+
     def check_dir_path_slash_ending(self):
         with self.assertRaises(ValueError):
             check_dir_path_slash_ending('/usr')
+
+    def test_make_simple_structure(self):
+        self.assertEqual(
+            first=make_simple_structure(
+                inputs_number=3,
+                intermediate_layers_number=4,
+                intermediate_layers_neurons_number=5,
+                outputs_number=20
+            ),
+            second=[3, 5, 5, 5, 5, 20],
+        )
+
+    def test_measure_execution_time(self):
+        print_decorated = measure_execution_time(print)
+        self.assertIsNot(print, print_decorated)
+        start = time()
+        testing_time = print_decorated('Testing print')
+        self.assertIs(type(testing_time), float)
+        self.assertGreater(time() - start, testing_time)
+
 
 class NeuronTestCase(TestCase):
     def test_count_arrays_product(self):
