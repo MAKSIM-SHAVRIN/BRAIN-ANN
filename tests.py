@@ -129,6 +129,28 @@ class UtilsTestCase(TestCase):
         self.assertIs(type(testing_time), float)
         self.assertGreater(time() - start, testing_time)
 
+    def test_mix_in(self):
+        class B:
+            def method_5(self):
+                pass
+
+            def method_6(self):
+                pass
+
+        @mix_in(B)
+        class A:
+            def method_1(self):
+                pass
+
+            def method_2(self):
+                pass
+
+            def method_3(self):
+                pass
+            
+        self.assertIs(A.__dict__['method_5'], B.method_5)
+        self.assertIs(A.__dict__['method_6'], B.method_6)
+
 
 class NeuronTestCase(TestCase):
     def test_count_arrays_product(self):
