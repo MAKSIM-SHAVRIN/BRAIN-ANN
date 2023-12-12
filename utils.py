@@ -122,4 +122,8 @@ def mix_in(*mixins: type):
 
 
 def split_by_evenodd_position(sequence) -> tuple:
+    if len(sequence) < 2:
+        raise ValueError('Sequence must contain at least two elements')
+    if len(sequence) % 2 != 0:
+        raise ValueError('Sequence must contain even number of elements')
     return (sequence[::2], sequence[1::2])
