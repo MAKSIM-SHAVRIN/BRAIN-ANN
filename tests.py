@@ -1,3 +1,4 @@
+from pathlib import Path
 from time import time
 from unittest import TestCase, main
 
@@ -133,7 +134,6 @@ class UtilsTestCase(TestCase):
         class B:
             def method_5(self):
                 pass
-
             def method_6(self):
                 pass
 
@@ -141,10 +141,8 @@ class UtilsTestCase(TestCase):
         class A:
             def method_1(self):
                 pass
-
             def method_2(self):
                 pass
-
             def method_3(self):
                 pass
             
@@ -338,6 +336,19 @@ class PerceptronTestCase(TestCase):
         perceptron = Perceptron.init_with_weights(structure, weights)
         self.assertEqual(perceptron([0, 1]), [1, 0])
 
+    def test_all_neurons(self):
+        structure = [7, 3, 8, 2, 10]
+        perceptron = Perceptron(structure)
+        self.assertEqual(len(perceptron.all_neurons), 23)
+
+    def test_all_weights(self):
+        structure = [7, 3, 8, 2, 10]
+        perceptron = Perceptron(structure)
+        self.assertEqual(len(perceptron.all_weights), 104)
+
+    def test_save_and_load(self):
+        pass
+
 
 class RecurrentTestCase(TestCase):
     def test_Recurrent__init__(self):
@@ -346,6 +357,9 @@ class RecurrentTestCase(TestCase):
         with self.assertRaises(ValueError):
             Recurrent(inputs_number=12, outputs_number=0)
         self.assertEqual(Recurrent().structure, [26, *6*[10], 334])
+
+    def test_save_and_load(self):
+        pass
 
 
 if __name__ == '__main__':
