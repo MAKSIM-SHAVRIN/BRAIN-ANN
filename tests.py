@@ -151,6 +151,16 @@ class UtilsTestCase(TestCase):
         self.assertIs(A.__dict__['method_5'], B.method_5)
         self.assertIs(A.__dict__['method_6'], B.method_6)
 
+    def test_split_by_evenodd_position(self):
+        self.assertEqual(
+            first=split_by_evenodd_position([0, 1, 2, 3, 4, 5]),
+            second=([0, 2, 4], [1, 3, 5]),
+        )
+        with self.assertRaises(ValueError):
+            split_by_evenodd_position([0, 1, 2, 3, 4])
+        with self.assertRaises(ValueError):
+            split_by_evenodd_position([4])
+
 
 class NeuronTestCase(TestCase):
     def test_count_arrays_product(self):
