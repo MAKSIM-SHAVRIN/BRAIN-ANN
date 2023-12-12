@@ -386,7 +386,36 @@ class RecurrentTestCase(TestCase):
         self.assertEqual(Recurrent().structure, [26, *6*[10], 334])
 
     def test_save_and_load(self):
-        pass
+        recurrent_1 = Recurrent
+        self.assertFalse(
+            Path(
+                f'{str(Path(__file__).parent.absolute())}/testing.recurrent',
+            ).exists(),
+        )
+        with self.assertRaises(ValueError):
+            recurrent_1.save(
+                dir_path=str(Path(__file__).parent.absolute()),
+                file_name='testing',
+            )
+        recurrent_1.save(
+            dir_path=str(Path(__file__).parent.absolute()) + '/',
+            file_name='testing',
+        )
+        self.assertTrue(
+            Path(
+                f'{str(Path(__file__).parent.absolute())}/testing.recurrent',
+            ).exists(),
+        )
+        recurrent_2 = Recurrent.load(
+            f'{str(Path(__file__).parent.absolute())}/testing.recurrent',
+        )
+        self.assertEqual(recurrent_1, recurrent_2)
+        Path(
+            f'{str(Path(__file__).parent.absolute())}/testing.recurrent',
+        ).unlink()
+        Path(
+            f'{str(Path(__file__).parent.absolute())}/testing.perceptron',
+        ).unlink()
 
 
 if __name__ == '__main__':
