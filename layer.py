@@ -34,4 +34,4 @@ class Layer:
             neuron._delete_weight(index)
 
     def __eq__(self, o):
-        return self.neurons == o.newrons
+        return self.neurons == o.neurons
