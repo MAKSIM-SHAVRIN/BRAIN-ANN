@@ -386,7 +386,7 @@ class RecurrentTestCase(TestCase):
         self.assertEqual(Recurrent().structure, [26, *6*[10], 334])
 
     def test_save_and_load(self):
-        recurrent_1 = Recurrent
+        recurrent_1 = Recurrent()
         self.assertFalse(
             Path(
                 f'{str(Path(__file__).parent.absolute())}/testing.recurrent',
