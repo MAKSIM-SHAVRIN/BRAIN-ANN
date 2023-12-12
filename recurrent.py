@@ -106,8 +106,10 @@ class Recurrent(Perceptron):
     def load(cls, file: str):
         with open(file, mode='r', encoding='ascii') as filebuffer:
             dictionary = load(fp=filebuffer)
-        dir_path_and_name = Path(file).parent + '/' + Path(file).stem
-        perceptron = super().load(file=f'{dir_path_and_name}.perceptron')
+        dir_path_and_name = str(Path(file).parent.absolute())\
+            + '/'\
+            + str(Path(file).stem)
+        perceptron = Perceptron.load(f'{dir_path_and_name}.perceptron')
 
         recurrent = object.__new__(cls)
         recurrent.layers = perceptron.layers
