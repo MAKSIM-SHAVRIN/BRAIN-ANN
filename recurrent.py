@@ -30,16 +30,17 @@ class Recurrent(Perceptron):
     INITIAL_MIDDLE_LAYERS_STRUCTURE: list = 6*[10]
     INITIAL_WRITING_MEMORY_CELLS_NUMBER: int = 5
     INITIAL_READING_MEMORY_CELLS_NUMBER: int = 5
+    ADRESS_POWER: int = 10
 
     MEMORY_CELL_STRUCTURE = dict(
-        layer_adress=10,
-        neuron_adress=10,
-        weight_adress=10,
+        layer_adress=ADRESS_POWER,
+        neuron_adress=ADRESS_POWER,
+        weight_adress=ADRESS_POWER,
     )
     REFORMING_NEURONS_STRUCTURE = dict(
         signal_neurons_number=3,
-        layer_adress=10,
-        neuron_adress=10,
+        layer_adress=ADRESS_POWER,
+        neuron_adress=ADRESS_POWER,
     )
     SIGNAL_NEURONS_NUMBER: int = 3
     TIME_INPUTS_NUMBER: int = 5
