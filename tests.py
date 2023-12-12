@@ -348,18 +348,18 @@ class PerceptronTestCase(TestCase):
 
     def test_save_and_load(self):
         structure = [7, 3, 8, 2, 10]
-        perceptron = Perceptron(structure)
+        perceptron_1 = Perceptron(structure)
         self.assertFalse(
             Path(
                 f'{str(Path(__file__).parent.absolute())}/testing.perceptron',
             ).exists(),
         )
         with self.assertRaises(ValueError):
-            perceptron.save(
+            perceptron_1.save(
                 dir_path=str(Path(__file__).parent.absolute()),
                 file_name='testing',
             )
-        perceptron.save(
+        perceptron_1.save(
             dir_path=str(Path(__file__).parent.absolute()) + '/',
             file_name='testing',
         )
@@ -368,6 +368,13 @@ class PerceptronTestCase(TestCase):
                 f'{str(Path(__file__).parent.absolute())}/testing.perceptron',
             ).exists(),
         )
+        perceptron_2 = Perceptron.load(
+            f'{str(Path(__file__).parent.absolute())}/testing.perceptron',
+        )
+        self.assertEqual(perceptron_1, perceptron_2)
+        Path(
+            f'{str(Path(__file__).parent.absolute())}/testing.perceptron',
+        ).unlink()
 
 
 class RecurrentTestCase(TestCase):
