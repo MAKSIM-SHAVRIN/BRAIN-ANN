@@ -47,3 +47,6 @@ class Neuron:
         if index == 0:
             raise PermissionError('Can`t delete bias input')
         self.weights.pop(index)
+
+    def __eq__(self, o):
+        return self.weights == o.weights

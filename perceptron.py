@@ -71,3 +71,6 @@ class Perceptron:
     @property
     def all_weights(self) -> list[int]:
         return list(chain(*[neuron.weights for neuron in self.all_neurons]))
+
+    def __eq__(self, o):
+        self.layers == o.layers

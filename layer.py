@@ -32,3 +32,6 @@ class Layer:
     def _delete_weights(self, index: int):
         for neuron in self.neurons:
             neuron._delete_weight(index)
+
+    def __eq__(self, o):
+        return self.neurons == o.newrons
