@@ -369,3 +369,8 @@ class Recurrent(Perceptron):
             if controlling_signal == self.STOP_SIGNAL:
                 break
         return resoults
+
+    def __eq__(self, o):
+        return self.layers == o.layers\
+            and self.inputs_number == o.inputs_number\
+            and self.outputs_number == o.outputs_number
