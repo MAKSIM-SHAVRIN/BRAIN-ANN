@@ -90,7 +90,8 @@ class Recurrent(Perceptron):
 
     def save(self, dir_path: str, file_name: str) -> str:
         check_dir_path_slash_ending(dir_path)
-        file = dir_path + file_name + '.recurrent'
+
+        file = f'{dir_path}{file_name}.recurrent'
         with open(file, mode='w', encoding='ascii') as filebuffer:
             dump(
                 obj=dict(
@@ -120,7 +121,7 @@ class Recurrent(Perceptron):
     @property
     def reading_memory_cells_number(self) -> int:
         return self.structure[0]\
-            - self.signifying_inputs_number\
+            - self.inputs_number\
             - self.TIME_INPUTS_NUMBER\
             - self.REFLECTIONS_INPUTS_NUMBER
 
