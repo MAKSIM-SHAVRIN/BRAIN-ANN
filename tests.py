@@ -349,32 +349,22 @@ class PerceptronTestCase(TestCase):
     def test_save_and_load(self):
         structure = [7, 3, 8, 2, 10]
         perceptron_1 = Perceptron(structure)
-        self.assertFalse(
-            Path(
-                f'{str(Path(__file__).parent.absolute())}/testing.perceptron',
-            ).exists(),
-        )
+
+        working_dir_path = str(Path(__file__).parent.absolute())
+        file = f'{working_dir_path}/testing.perceptron'
+
+        self.assertFalse(Path(file).exists())
+
         with self.assertRaises(ValueError):
-            perceptron_1.save(
-                dir_path=str(Path(__file__).parent.absolute()),
-                file_name='testing',
-            )
-        perceptron_1.save(
-            dir_path=str(Path(__file__).parent.absolute()) + '/',
-            file_name='testing',
-        )
-        self.assertTrue(
-            Path(
-                f'{str(Path(__file__).parent.absolute())}/testing.perceptron',
-            ).exists(),
-        )
-        perceptron_2 = Perceptron.load(
-            f'{str(Path(__file__).parent.absolute())}/testing.perceptron',
-        )
+            perceptron_1.save(dir_path=working_dir_path, file_name='testing')
+
+        perceptron_1.save(dir_path=working_dir_path + '/', file_name='testing')
+        self.assertTrue(Path(file).exists())
+
+        perceptron_2 = Perceptron.load(file)
         self.assertEqual(perceptron_1, perceptron_2)
-        Path(
-            f'{str(Path(__file__).parent.absolute())}/testing.perceptron',
-        ).unlink()
+
+        Path(file).unlink()
 
 
 class RecurrentTestCase(TestCase):
@@ -437,9 +427,21 @@ class RecurrentTestCase(TestCase):
 
     def test_outputs_structure(self):
         class RecurrentTest(Recurrent):
+            ADRESS_POWER = 2
             INITIAL_READING_MEMORY_CELLS_NUMBER = 27
             INITIAL_WRITING_MEMORY_CELLS_NUMBER = 45
             INITIAL_MIDDLE_LAYERS_STRUCTURE = [22, 4, 8, 61]
+
+            MEMORY_CELL_STRUCTURE = dict(
+                layer_adress=ADRESS_POWER,
+                neuron_adress=ADRESS_POWER,
+                weight_adress=ADRESS_POWER,
+            )
+            REFORMING_NEURONS_STRUCTURE = dict(
+                signal_neurons_number=3,
+                layer_adress=ADRESS_POWER,
+                neuron_adress=ADRESS_POWER,
+            )
 
         recurrent = RecurrentTest(inputs_number=69, outputs_number=64)
         self.assertEqual(
@@ -447,11 +449,38 @@ class RecurrentTestCase(TestCase):
             second=dict(
                 signifying_outputs=64,
                 signal_neurons=3,
-                reforming_neurons=23,
-                writing_memory_neurons=45*30,
-                reading_memory_neurons=27*30,
+                reforming_neurons=7,
+                writing_memory_neurons=45*2*3,
+                reading_memory_neurons=27*2*3,
             ),
         )
+
+    def test_write_weights(self):
+        pass
+
+    def test_read_weights(self):
+        pass
+
+    def test_add_neuron(self):
+        pass
+
+    def test_delete_neuron(self):
+        pass
+
+    def test_add_writing_memory_neurons(self):
+        pass
+
+    def test_delete_writing_memory_neurons(self):
+        pass
+
+    def test_add_reading_memory_neurons(self):
+        pass
+
+    def test_delete_reading_memory_neurons(self):
+        pass
+
+    def test_transform(self):
+        pass
 
 
 if __name__ == '__main__':
