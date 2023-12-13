@@ -211,7 +211,7 @@ class Recurrent(Perceptron):
     def _add_writing_memory_neurons(self):
         last_layer = self.layers[-1]
         inputs_number = len(self.layers[-2].neurons)
-        index = self.signifying_outputs_number\
+        index = self.outputs_number\
             + self.SIGNAL_NEURONS_NUMBER\
             + dict_sum(self.REFORMING_NEURONS_STRUCTURE)
         for _ in dict_sum(self.MEMORY_CELL_STRUCTURE.values()):
@@ -220,7 +220,7 @@ class Recurrent(Perceptron):
     def _delete_writing_memory_neurons(self):
         if self.writing_memory_cells_number:
             last_layer = self.layers[-1]
-            index = self.signifying_outputs_number\
+            index = self.outputs_number\
                 + self.SIGNAL_NEURONS_NUMBER\
                 + dict_sum(self.REFORMING_NEURONS_STRUCTURE)
             for _ in dict_sum(self.MEMORY_CELL_STRUCTURE.values()):
