@@ -131,7 +131,7 @@ class Recurrent(Perceptron):
         reading_memory_neurons_number = self.reading_memory_cells_number\
             * memory_cell_neurons_number
         writing_memory_neurons_number = self.structure[-1]\
-            - self.signifying_outputs_number\
+            - self.outputs_number\
             - self.SIGNAL_NEURONS_NUMBER\
             - dict_sum(self.REFORMING_NEURONS_STRUCTURE)\
             - reading_memory_neurons_number
