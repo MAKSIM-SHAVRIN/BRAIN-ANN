@@ -146,7 +146,7 @@ class Recurrent(Perceptron):
         reading_memory_neurons = self.reading_memory_cells_number\
             * dict_sum(self.MEMORY_CELL_STRUCTURE)
         return dict(
-            signifying_outputs=self.signifying_outputs_number,
+            signifying_outputs=self.outputs_number,
             signal_neurons=self.SIGNAL_NEURONS_NUMBER,
             reforming_neurons=dict_sum(self.REFORMING_NEURONS_STRUCTURE),
             writing_memory_neurons=writing_memory_neurons,
