@@ -387,35 +387,36 @@ class RecurrentTestCase(TestCase):
 
     def test_save_and_load(self):
         recurrent_1 = Recurrent()
-        self.assertFalse(
-            Path(
-                f'{str(Path(__file__).parent.absolute())}/testing.recurrent',
-            ).exists(),
-        )
+        working_dir_path = str(Path(__file__).parent.absolute())
+        file = f'{working_dir_path}/testing.recurrent'
+
+        self.assertFalse(Path(file).exists())
         with self.assertRaises(ValueError):
-            recurrent_1.save(
-                dir_path=str(Path(__file__).parent.absolute()),
-                file_name='testing',
-            )
-        recurrent_1.save(
-            dir_path=str(Path(__file__).parent.absolute()) + '/',
-            file_name='testing',
-        )
-        self.assertTrue(
-            Path(
-                f'{str(Path(__file__).parent.absolute())}/testing.recurrent',
-            ).exists(),
-        )
-        recurrent_2 = Recurrent.load(
-            f'{str(Path(__file__).parent.absolute())}/testing.recurrent',
-        )
+            recurrent_1.save(dir_path=working_dir_path, file_name='testing')
+
+        recurrent_1.save(dir_path=working_dir_path + '/', file_name='testing')
+        self.assertTrue(Path(file).exists())
+
+        recurrent_2 = Recurrent.load(file)
         self.assertEqual(recurrent_1, recurrent_2)
-        Path(
-            f'{str(Path(__file__).parent.absolute())}/testing.recurrent',
-        ).unlink()
-        Path(
-            f'{str(Path(__file__).parent.absolute())}/testing.perceptron',
-        ).unlink()
+
+        Path(file).unlink()
+        Path(f'{working_dir_path}/testing.perceptron').unlink()
+
+    def test_reading_memory_cells_number(self):
+        recurrent = Recurrent()
+        self.assertEqual(
+            first=recurrent.reading_memory_cells_number,
+            second=recurrent.INITIAL_READING_MEMORY_CELLS_NUMBER,
+        )
+        class RecurrentTest(Recurrent):
+            INITIAL_READING_MEMORY_CELLS_NUMBER = 27
+
+        recurrent = RecurrentTest(inputs_number=698, outputs_number=64)
+        self.assertEqual(
+            first=recurrent.reading_memory_cells_number,
+            second=recurrent.INITIAL_READING_MEMORY_CELLS_NUMBER,
+        )
 
 
 if __name__ == '__main__':
