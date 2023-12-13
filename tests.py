@@ -418,6 +418,23 @@ class RecurrentTestCase(TestCase):
             second=recurrent.INITIAL_READING_MEMORY_CELLS_NUMBER,
         )
 
+    def test_writing_memory_cells_number(self):
+        recurrent = Recurrent()
+        self.assertEqual(
+            first=recurrent.writing_memory_cells_number,
+            second=recurrent.INITIAL_WRITING_MEMORY_CELLS_NUMBER,
+        )
+        class RecurrentTest(Recurrent):
+            INITIAL_READING_MEMORY_CELLS_NUMBER = 27
+            INITIAL_WRITING_MEMORY_CELLS_NUMBER = 45
+            INITIAL_MIDDLE_LAYERS_STRUCTURE = [22, 4, 8, 61]
+
+        recurrent = RecurrentTest(inputs_number=69, outputs_number=64)
+        self.assertEqual(
+            first=recurrent.writing_memory_cells_number,
+            second=recurrent.INITIAL_WRITING_MEMORY_CELLS_NUMBER,
+        )
+
 
 if __name__ == '__main__':
     main()
