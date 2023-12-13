@@ -455,6 +455,26 @@ class RecurrentTestCase(TestCase):
             ),
         )
 
+    class RecurrentTest(Recurrent):
+        ADRESS_POWER = 10
+        INITIAL_READING_MEMORY_CELLS_NUMBER = 1
+        INITIAL_WRITING_MEMORY_CELLS_NUMBER = 1
+        INITIAL_MIDDLE_LAYERS_STRUCTURE = [10]
+
+        MEMORY_CELL_STRUCTURE = dict(
+            layer_adress=ADRESS_POWER,
+            neuron_adress=ADRESS_POWER,
+            weight_adress=ADRESS_POWER,
+        )
+        REFORMING_NEURONS_STRUCTURE = dict(
+            signal_neurons_number=3,
+            layer_adress=ADRESS_POWER,
+            neuron_adress=ADRESS_POWER,
+        )
+        SIGNAL_NEURONS_NUMBER: int = 3
+        TIME_INPUTS_NUMBER: int = 5
+        REFLECTIONS_INPUTS_NUMBER: int = 8
+
     def test_write_weights(self):
         pass
 
