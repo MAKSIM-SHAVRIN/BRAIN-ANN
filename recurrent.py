@@ -268,10 +268,21 @@ class Recurrent(Perceptron):
         elif signal == self.DELETE_READING_MEMORY_SIGNAL:
             self._delete_reading_memory_neurons()
 
-    def __call__(self, inputs: list[list[int]], time_limit=None):
+    def __call__(
+        self, inputs: list[list[int]],
+        time_limit:float=None, steps_limit:int=None,
+        transform=True, introspection=True,
+        just_last_resoult=False, do_not_skip_and_repeat=False,
+
+    ) -> list[list[int]]:
+
         # Start of timer
         if time_limit:
             start_time = time()
+
+        # Start of steps counting
+        if steps_limit:
+            steps_counter = 0
 
         # initial controlling signal is always do nothing
         controlling_signal = self.NOTHING_SIGNAL
@@ -289,13 +300,19 @@ class Recurrent(Perceptron):
                 resoults = list()
                 # Iterations
                 for inputs_values in inputs:
-                    if controlling_signal == self.SKIP_SIGNAL:
-                        controlling_signal = self.NOTHING_SIGNAL
-                        continue
+                    if not do_not_skip_and_repeat:
+                        if controlling_signal == self.SKIP_SIGNAL:
+                            controlling_signal = self.NOTHING_SIGNAL
+                            continue
                     # Repeating
                     while True:
                         # Stop by time limit
                         if time_limit and time_limit < time() - start_time:
+                            controlling_signal = self.STOP_SIGNAL
+                            break
+
+                        # Stop by steps limit
+                        if steps_limit and steps_limit < steps_counter:
                             controlling_signal = self.STOP_SIGNAL
                             break
 
@@ -340,12 +357,22 @@ class Recurrent(Perceptron):
                             reading_memory,
                         )
                         # Transforming
-                        self._transform(transforming_outputs=transforming)
+                        if transform:
+                            self._transform(transforming_outputs=transforming)
 
                         # Add character to list of resoults
-                        resoults.append(signifying_outputs)
+                        if just_last_resoult:
+                            resoults = [signifying_outputs,]
+                        else:
+                            resoults.append(signifying_outputs)
+
+                        # Increase steps counter
+                        steps_counter += 1
 
                         # Stop repeating
+                        if do_not_skip_and_repeat:
+                            break
+
                         if controlling_signal != self.REPEAT_SIGNAL:
                             break
 
@@ -361,11 +388,11 @@ class Recurrent(Perceptron):
                 elif controlling_signal == self.STOP_REFLECTIONS_SIGNAL:
                     break
 
-                # Resoults are empty for the next reflection
-                elif resoults == list():
+                # Resoults are empty or not enough for the next reflection
+                elif resoults == list() or just_last_resoult:
                     break
 
-                # Prepare request for new reflection from  results
+                # Prepare request for new reflection from results
                 inputs = resoults
 
             # Stop reflections loop
