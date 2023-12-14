@@ -268,6 +268,15 @@ class Recurrent(Perceptron):
         elif signal == self.DELETE_READING_MEMORY_SIGNAL:
             self._delete_reading_memory_neurons()
 
+    def _introspect(
+        self, writting_memory: list[int], reading_memory: list[int],
+    ) -> list[int]:
+        # Read weights
+        reading_memory_inputs = self._read_weights(reading_memory)
+        # Write weights
+        self._write_weights(writting_memory)
+        return reading_memory_inputs
+
     def __call__(
         self, inputs: list[list[int]],
         time_limit:float=None, steps_limit:int=None,
@@ -341,7 +350,7 @@ class Recurrent(Perceptron):
                             signifying_outputs,
                             controlling_signal,
                             transforming,
-                            writing_memory,
+                            writting_memory,
                             reading_memory,
 
                         ) = split_by_volumes(
@@ -349,13 +358,10 @@ class Recurrent(Perceptron):
                                 volumes=self.outputs_structure.values(),
                             )
 
-                        # Write weights
-                        self._write_weights(writing_memory)
+                        # Introspecton
+                        if introspection:
+                            self._introspect(writting_memory, reading_memory)
 
-                        # Read weights
-                        reading_memory_inputs = self._read_weights(
-                            reading_memory,
-                        )
                         # Transforming
                         if transform:
                             self._transform(transforming_outputs=transforming)
@@ -372,7 +378,6 @@ class Recurrent(Perceptron):
                         # Stop repeating
                         if do_not_skip_and_repeat:
                             break
-
                         if controlling_signal != self.REPEAT_SIGNAL:
                             break
 
@@ -387,7 +392,6 @@ class Recurrent(Perceptron):
                     break
                 elif controlling_signal == self.STOP_REFLECTIONS_SIGNAL:
                     break
-
                 # Resoults are empty or not enough for the next reflection
                 elif resoults == list() or just_last_resoult:
                     break
