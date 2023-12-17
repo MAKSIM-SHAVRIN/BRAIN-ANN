@@ -46,6 +46,7 @@ class Recurrent(Perceptron):
     TIME_INPUTS_NUMBER: int = 5
     REFLECTIONS_INPUTS_NUMBER: int = 8
 
+
     def __init__(self, inputs_number: int = 8, outputs_number: int = 8):
         if inputs_number < 1:
             raise ValueError('Recurrent must have at least one input')
@@ -55,6 +56,17 @@ class Recurrent(Perceptron):
         self.inputs_number = inputs_number
         self.outputs_number = outputs_number
 
+        super().__init__(
+            [
+                self.perceptron_inputs_number,
+                *self.INITIAL_MIDDLE_LAYERS_STRUCTURE,
+                self.perceptron_outputs_number,
+            ],
+        )
+        return None  # Added for visual end of the method
+
+    @property
+    def perceptron_inputs_number(self) -> int:
         perceptron_inputs_number = dict_sum(
             dict(
                 signifying_inputs=self.inputs_number,
@@ -63,7 +75,10 @@ class Recurrent(Perceptron):
                 reading_memory_inputs=self.INITIAL_READING_MEMORY_CELLS_NUMBER,
             ),
         )
+        return perceptron_inputs_number
 
+    @property
+    def perceptron_outputs_number(self) -> int:
         memory_cell_neurons_number = dict_sum(self.MEMORY_CELL_STRUCTURE)
         w_memory_neurons_number = self.INITIAL_WRITING_MEMORY_CELLS_NUMBER\
             * memory_cell_neurons_number
@@ -79,14 +94,7 @@ class Recurrent(Perceptron):
                 reading_memory_neurons=r_memory_neurons_number,
             ),
         )
-        super().__init__(
-            [
-                perceptron_inputs_number,
-                *self.INITIAL_MIDDLE_LAYERS_STRUCTURE,
-                perceptron_outputs_number,
-            ],
-        )
-        return None  # Added for visual end of the method
+        return perceptron_outputs_number
 
     def save(self, dir_path: str, file_name: str) -> str:
         check_dir_path_slash_ending(dir_path)
@@ -279,8 +287,8 @@ class Recurrent(Perceptron):
 
     def __call__(
         self, inputs: list[list[int]],
-        time_limit:float=None, steps_limit:int=None,
-        transform=True, introspection=True,
+        time_limit: float=None, steps_limit: int=None,
+        transform=True, introspect=True,
         just_last_resoult=False, do_not_skip_and_repeat=False,
 
     ) -> list[list[int]]:
@@ -359,7 +367,7 @@ class Recurrent(Perceptron):
                             )
 
                         # Introspecton
-                        if introspection:
+                        if introspect:
                             self._introspect(writting_memory, reading_memory)
 
                         # Transforming
