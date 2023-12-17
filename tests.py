@@ -502,6 +502,9 @@ class RecurrentTestCase(TestCase):
     def test_transform(self):
         pass
 
+    def test_introspect(self):
+        pass
+
 
 if __name__ == '__main__':
     main()
