@@ -346,16 +346,7 @@ class Recurrent(Perceptron):
                             width=self.REFLECTIONS_INPUTS_NUMBER,
                         )
 
-                        # Get outputs as list of binary signals
-                        outputs = super().__call__(
-                            [
-                                *inputs_values,
-                                *time_binary_list,
-                                *reflections_binary_list,
-                                *reading_memory_inputs,
-                            ],
-                        )
-
+                        # Get outputs as list of binary signals and
                         # Split binary list to valuable binary lists
                         (
                             signifying_outputs,
@@ -365,7 +356,14 @@ class Recurrent(Perceptron):
                             reading_memory,
 
                         ) = split_by_volumes(
-                                list_for_split=outputs,
+                                list_for_split=super().__call__(
+                                    [
+                                        *inputs_values,
+                                        *time_binary_list,
+                                        *reflections_binary_list,
+                                        *reading_memory_inputs,
+                                    ],
+                                ),
                                 volumes=self.outputs_structure.values(),
                             )
 
