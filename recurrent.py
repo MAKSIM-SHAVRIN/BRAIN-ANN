@@ -56,17 +56,20 @@ class Recurrent(Perceptron):
         self.inputs_number = inputs_number
         self.outputs_number = outputs_number
 
-        super().__init__(
-            [
-                self.perceptron_inputs_number,
-                *self.INITIAL_MIDDLE_LAYERS_STRUCTURE,
-                self.perceptron_outputs_number,
-            ],
-        )
+        super().__init__(self._initial_perceptron_structure)
         return None  # Added for visual end of the method
 
     @property
-    def perceptron_inputs_number(self) -> int:
+    def _initial_perceptron_structure(self) -> list[int]:
+        structure = [
+            self._initial_inputs_number,
+            *self.INITIAL_MIDDLE_LAYERS_STRUCTURE,
+            self._initial_outputs_number,
+        ]
+        return structure
+
+    @property
+    def _initial_inputs_number(self) -> int:
         perceptron_inputs_number = dict_sum(
             dict(
                 signifying_inputs=self.inputs_number,
@@ -78,7 +81,7 @@ class Recurrent(Perceptron):
         return perceptron_inputs_number
 
     @property
-    def perceptron_outputs_number(self) -> int:
+    def _initial_outputs_number(self) -> int:
         memory_cell_neurons_number = dict_sum(self.MEMORY_CELL_STRUCTURE)
         w_memory_neurons_number = self.INITIAL_WRITING_MEMORY_CELLS_NUMBER\
             * memory_cell_neurons_number
