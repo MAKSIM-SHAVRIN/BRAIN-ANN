@@ -296,7 +296,7 @@ class Recurrent(Perceptron):
 
         # Start of timer
         if time_limit:
-            start_time = time()
+        start_time = time()
 
         # Start of steps counting
         if steps_limit:
