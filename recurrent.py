@@ -382,7 +382,8 @@ class Recurrent(Perceptron):
                             resoults.append(signifying_outputs)
 
                         # Increase steps counter
-                        steps_counter += 1
+                        if steps_limit:
+                            steps_counter += 1
 
                         # Stop repeating
                         if do_not_skip_and_repeat:
