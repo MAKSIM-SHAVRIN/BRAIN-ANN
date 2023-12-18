@@ -335,9 +335,10 @@ class Recurrent(Perceptron):
                             break
 
                         # Convert time data to lists of binary signals
+                        
                         time_binary_list = conv_int_to_list(
-                            number=int(time()),
-                            width=self.TIME_INPUTS_NUMBER,
+                            number=int(time() - start_time),
+                            length=self.TIME_INPUTS_NUMBER,
                         )
                         reflections_binary_list = conv_int_to_list(
                             number=reflection,
