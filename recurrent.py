@@ -342,7 +342,7 @@ class Recurrent(Perceptron):
                         )
                         reflections_binary_list = conv_int_to_list(
                             number=reflection,
-                            width=self.REFLECTIONS_INPUTS_NUMBER,
+                            length=self.REFLECTIONS_INPUTS_NUMBER,
                         )
 
                         # Get outputs as list of binary signals and
