@@ -248,7 +248,7 @@ class Recurrent(Perceptron):
             for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
                 last_layer.neurons.pop()
             # delete reading memory input
-            self.layers[0]._delete_weights(weight_number=self.structure[0])
+            self.layers[0]._delete_weights()
 
     def _transform(self, transforming_outputs: list[int]):
         signal, layer_adress, neuron_adress = split_by_volumes(
