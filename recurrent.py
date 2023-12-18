@@ -203,10 +203,7 @@ class Recurrent(Perceptron):
     def _add_neuron(self, layer_adress: list[int]):
         # `self.layers[:-1]` exclude last layer cuz it contains signal clasters
         layer_index = get_index_by_adress(self.layers[:-1], layer_adress)
-        layer = self.layers[layer_index]
-        # get inputs number from previous layer neurons number
-        inputs_number = self.structure[layer_index]
-        layer._add_neuron(neuron_inputs_number=inputs_number)
+        self.layers[layer_index]._add_neuron()
         # add weights for each neuron of the next layer
         self.layers[layer_index + 1]._add_weights()
 
