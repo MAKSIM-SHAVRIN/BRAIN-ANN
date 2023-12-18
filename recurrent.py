@@ -222,8 +222,8 @@ class Recurrent(Perceptron):
         index = self.outputs_number\
             + self.SIGNAL_NEURONS_NUMBER\
             + dict_sum(self.REFORMING_NEURONS_STRUCTURE)
-        for _ in dict_sum(self.MEMORY_CELL_STRUCTURE.values()):
-            last_layer._insert_neuron(index, inputs_number)
+        for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
+            last_layer._insert_neuron(index)
 
     def _delete_writing_memory_neurons(self):
         if self.writing_memory_cells_number:
@@ -231,21 +231,21 @@ class Recurrent(Perceptron):
             index = self.outputs_number\
                 + self.SIGNAL_NEURONS_NUMBER\
                 + dict_sum(self.REFORMING_NEURONS_STRUCTURE)
-            for _ in dict_sum(self.MEMORY_CELL_STRUCTURE.values()):
+            for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
                 last_layer.neurons.pop(index)
 
     def _add_reading_memory_neurons(self):
         last_layer = self.layers[-1]
         inputs_number = len(self.layers[-2].neurons)
-        for _ in dict_sum(self.MEMORY_CELL_STRUCTURE.values()):
-            last_layer._add_neuron(inputs_number)
+        for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
+            last_layer._add_neuron()
         # add reading memory input
         self.layers[0]._add_weights()
 
     def _delete_reading_memory_neurons(self):
         if self.reading_memory_cells_number:
             last_layer = self.layers[-1]
-            for _ in dict_sum(self.MEMORY_CELL_STRUCTURE.values()):
+            for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
                 last_layer.neurons.pop()
             # delete reading memory input
             self.layers[0]._delete_weights(weight_number=self.structure[0])
