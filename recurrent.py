@@ -254,6 +254,7 @@ class Recurrent(Perceptron):
         signal, layer_adress, neuron_adress = split_by_volumes(
             list_for_split=transforming_outputs,
             volumes=self.REFORMING_NEURONS_STRUCTURE.values(),
+            get_rest=False,
         )
         # Add or delete neuron
         if signal == self.ADD_NEURON_SIGNAL:
