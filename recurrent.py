@@ -418,3 +418,20 @@ class Recurrent(Perceptron):
         return self.layers == o.layers\
             and self.inputs_number == o.inputs_number\
             and self.outputs_number == o.outputs_number
+
+
+# Testing
+if __name__ == '__main__':
+    print(
+        Recurrent()(
+            [
+                [1, 1, 0, 1, 0, 1, 1, 1],
+                [1, 1, 0, 1, 0, 1, 1, 1],
+                [1, 1, 0, 1, 0, 1, 1, 1],
+                [1, 1, 0, 1, 0, 1, 1, 1],
+                [1, 1, 0, 1, 0, 1, 1, 1],
+                [1, 1, 0, 1, 0, 1, 1, 1],
+                [1, 1, 0, 1, 0, 1, 1, 1],
+            ],
+        ),
+    )
