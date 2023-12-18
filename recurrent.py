@@ -364,6 +364,7 @@ class Recurrent(Perceptron):
                                     ],
                                 ),
                                 volumes=self.outputs_structure.values(),
+                                get_rest=False,
                             )
 
                         # Introspecton
