@@ -1,4 +1,3 @@
-from neuron import Neuron
 
 
 class Layer:
