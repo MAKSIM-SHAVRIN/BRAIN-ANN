@@ -4,16 +4,16 @@ from time import time
 
 from perceptron import Perceptron
 from utils import (check_dir_path_slash_ending, conv_int_to_list, dict_sum,
-                   get_element_by_adress, get_index_by_adress,
                    split_by_volumes)
 
 
-class Recurrent(Perceptron):
+class Signals:
     # Controlling signals
     STOP_SIGNAL = [0, 0, 1]
     SKIP_SIGNAL = [0, 1, 0]
     REPEAT_SIGNAL = [1, 0, 0]
     STOP_REFLECTIONS_SIGNAL = [1, 1, 1]
+
     NOTHING_SIGNAL = [0, 0, 0]
 
     # Transforming signals
@@ -26,16 +26,19 @@ class Recurrent(Perceptron):
     ADD_READING_MEMORY_SIGNAL = [1, 0, 1]
     DELETE_READING_MEMORY_SIGNAL = [0, 1, 0]
 
-    # Net structure
-    INITIAL_MIDDLE_LAYERS_STRUCTURE: list = 6*[10]
+
+class Structure:
     INITIAL_WRITING_MEMORY_CELLS_NUMBER: int = 5
+    INITIAL_MIDDLE_LAYERS_STRUCTURE: list = 6*[10]
     INITIAL_READING_MEMORY_CELLS_NUMBER: int = 5
+
     ADRESS_POWER: int = 10
 
     MEMORY_CELL_STRUCTURE = dict(
         layer_adress=ADRESS_POWER,
         neuron_adress=ADRESS_POWER,
         weight_adress=ADRESS_POWER,
+        new_walue=8,
     )
     REFORMING_NEURONS_STRUCTURE = dict(
         signal_neurons_number=3,
@@ -47,18 +50,7 @@ class Recurrent(Perceptron):
     REFLECTIONS_INPUTS_NUMBER: int = 8
 
 
-    def __init__(self, inputs_number: int = 8, outputs_number: int = 8):
-        if inputs_number < 1:
-            raise ValueError('Recurrent must have at least one input')
-        if outputs_number < 1:
-            raise ValueError('Recurrent must have at least one output')
-
-        self.inputs_number = inputs_number
-        self.outputs_number = outputs_number
-
-        super().__init__(self._initial_perceptron_structure)
-        return None  # Added for visual end of the method
-
+class Init:
     @property
     def _initial_perceptron_structure(self) -> list[int]:
         structure = [
@@ -99,36 +91,8 @@ class Recurrent(Perceptron):
         )
         return perceptron_outputs_number
 
-    def save(self, dir_path: str, file_name: str) -> str:
-        check_dir_path_slash_ending(dir_path)
 
-        file = f'{dir_path}{file_name}.recurrent'
-        with open(file, mode='w', encoding='ascii') as filebuffer:
-            dump(
-                obj=dict(
-                    inputs_number=self.inputs_number,
-                    outputs_number=self.outputs_number,
-                ),
-                fp=filebuffer,
-            )
-        super().save(dir_path, file_name)
-        return file
-
-    @classmethod
-    def load(cls, file: str):
-        with open(file, mode='r', encoding='ascii') as filebuffer:
-            dictionary = load(fp=filebuffer)
-        dir_path_and_name = str(Path(file).parent.absolute())\
-            + '/'\
-            + str(Path(file).stem)
-        perceptron = Perceptron.load(f'{dir_path_and_name}.perceptron')
-
-        recurrent = object.__new__(cls)
-        recurrent.layers = perceptron.layers
-        recurrent.inputs_number = dictionary['inputs_number']
-        recurrent.outputs_number = dictionary['outputs_number']
-        return recurrent
-
+class Call:
     @property
     def reading_memory_cells_number(self) -> int:
         return self.structure[0]\
@@ -174,15 +138,9 @@ class Recurrent(Perceptron):
                 list_for_split=writing_memory,
                 volumes=self.MEMORY_CELL_STRUCTURE.values(),
             )
-
-            neurons = get_element_by_adress(self.layers, layer_outputs).neurons
-            weights = get_element_by_adress(neurons, neuron_outputs,).weights
-            weight_index = get_index_by_adress(weights, weight_outputs)
-
-            weights[weight_index] = -weights[weight_index]
+            pass
 
     def _read_weights(self, reading_memory: list[int]):
-        reading_memory_inputs_binary_list = list()
         for _ in range(self.reading_memory_cells_number):
             (
                 layer_outputs, neuron_outputs, weight_outputs,
@@ -193,62 +151,27 @@ class Recurrent(Perceptron):
                 volumes=self.MEMORY_CELL_STRUCTURE.values(),
             )
 
-            neurons = get_element_by_adress(self.layers, layer_outputs).neurons
-            weights = get_element_by_adress(neurons, neuron_outputs,).weights
-            weight_index = get_index_by_adress(weights, weight_outputs)
-
-            reading_memory_inputs_binary_list.append(weights[weight_index])
-        return reading_memory_inputs_binary_list
+            pass
 
     def _add_neuron(self, layer_adress: list[int]):
-        # `self.layers[:-1]` exclude last layer cuz it contains signal clasters
-        layer_index = get_index_by_adress(self.layers[:-1], layer_adress)
-        self.layers[layer_index]._add_neuron()
-        # add weights for each neuron of the next layer
-        self.layers[layer_index + 1]._add_weights()
+        pass
 
     def _delete_neuron(self, layer_adress: list[int], neuron_adress: list):
-        # `self.layers[:-1]` exclude last layer cuz it contains signal clasters
-        layer_index = get_index_by_adress(self.layers[:-1], layer_adress)
-        layer = self.layers[layer_index]
-        neuron_index = get_index_by_adress(layer.neurons, neuron_adress)
-        layer.neurons.pop(neuron_index)
-        # delete due weights for each neuron of the next layer
-        self.layers[layer_index + 1]._delete_weights(neuron_index)
+        pass
 
     def _add_writing_memory_neurons(self):
-        last_layer = self.layers[-1]
-        inputs_number = len(self.layers[-2].neurons)
-        index = self.outputs_number\
-            + self.SIGNAL_NEURONS_NUMBER\
-            + dict_sum(self.REFORMING_NEURONS_STRUCTURE)
-        for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-            last_layer._insert_neuron(index)
+        pass
 
     def _delete_writing_memory_neurons(self):
         if self.writing_memory_cells_number:
-            last_layer = self.layers[-1]
-            index = self.outputs_number\
-                + self.SIGNAL_NEURONS_NUMBER\
-                + dict_sum(self.REFORMING_NEURONS_STRUCTURE)
-            for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                last_layer.neurons.pop(index)
+            pass
 
     def _add_reading_memory_neurons(self):
-        last_layer = self.layers[-1]
-        inputs_number = len(self.layers[-2].neurons)
-        for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-            last_layer._add_neuron()
-        # add reading memory input
-        self.layers[0]._add_weights()
+        pass
 
     def _delete_reading_memory_neurons(self):
         if self.reading_memory_cells_number:
-            last_layer = self.layers[-1]
-            for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                last_layer.neurons.pop()
-            # delete reading memory input
-            self.layers[0]._delete_weights()
+            pass
 
     def _transform(self, transforming_outputs: list[int]):
         signal, layer_adress, neuron_adress = split_by_volumes(
@@ -286,9 +209,55 @@ class Recurrent(Perceptron):
         self._write_weights(writting_memory)
         return reading_memory_inputs
 
+
+class SaveLoad:
+    def save(self, dir_path: str, file_name: str) -> str:
+        check_dir_path_slash_ending(dir_path)
+
+        file = f'{dir_path}{file_name}.recurrent'
+        with open(file, mode='w', encoding='ascii') as filebuffer:
+            dump(
+                obj=dict(
+                    inputs_number=self.inputs_number,
+                    outputs_number=self.outputs_number,
+                ),
+                fp=filebuffer,
+            )
+        super().save(dir_path, file_name)
+        return file
+
+    @classmethod
+    def load(cls, file: str):
+        with open(file, mode='r', encoding='ascii') as filebuffer:
+            dictionary = load(fp=filebuffer)
+        dir_path_and_name = str(Path(file).parent.absolute())\
+            + '/'\
+            + str(Path(file).stem)
+        perceptron = Perceptron.load(f'{dir_path_and_name}.perceptron')
+
+        recurrent = object.__new__(cls)
+        recurrent.layers = perceptron.layers
+        recurrent.inputs_number = dictionary['inputs_number']
+        recurrent.outputs_number = dictionary['outputs_number']
+        return recurrent
+
+
+class Brain(Perceptron, Signals, Structure, Init, Call, SaveLoad):
+    def __init__(self, inputs_number: int = 8, outputs_number: int = 8):
+        if inputs_number < 1:
+            raise ValueError('Recurrent must have at least one input')
+        if outputs_number < 1:
+            raise ValueError('Recurrent must have at least one output')
+
+        self.inputs_number = inputs_number
+        self.outputs_number = outputs_number
+
+        super().__init__(self._initial_perceptron_structure)
+        return None  # Added for visual end of the method
+
     def __call__(
         self, inputs: list[list[int]],
-        time_limit: float=None, steps_limit: int=None,
+        time_limit: float = None, steps_limit: int = None,
         transform=True, introspect=True,
         just_last_resoult=False, do_not_skip_and_repeat=False,
 
@@ -334,7 +303,6 @@ class Recurrent(Perceptron):
                             break
 
                         # Convert time data to lists of binary signals
-                        
                         time_binary_list = conv_int_to_list(
                             number=int(time() - start_time),
                             length=self.TIME_INPUTS_NUMBER,
@@ -402,7 +370,11 @@ class Recurrent(Perceptron):
                 elif controlling_signal == self.STOP_REFLECTIONS_SIGNAL:
                     break
                 # Resoults are empty or not enough for the next reflection
-                elif resoults == list() or just_last_resoult:
+                elif self.inputs_number != self.outputs_number:
+                    break
+                elif resoults == list():
+                    break
+                elif just_last_resoult:
                     break
 
                 # Prepare request for new reflection from results
@@ -422,7 +394,7 @@ class Recurrent(Perceptron):
 # Testing
 if __name__ == '__main__':
     print(
-        Recurrent()(
+        Brain()(
             [
                 [1, 1, 0, 1, 0, 1, 1, 1],
                 [1, 1, 0, 1, 0, 1, 1, 1],
