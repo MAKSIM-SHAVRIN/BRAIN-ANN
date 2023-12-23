@@ -1,5 +1,4 @@
-from numpy import (array, array_equal, delete, heaviside, insert, int8,
-                   ndarray, sum)
+from numpy import array_equal, delete, heaviside, insert, int8, ndarray, sum
 from numpy.random import randint
 
 

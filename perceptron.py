@@ -1,8 +1,7 @@
-from itertools import chain
 from json import dump, load
 from pathlib import Path
 
-from numpy import array, int8, ndarray, concatenate
+from numpy import array, int8, ndarray
 
 from layer import Layer
 from utils import check_dir_path_slash_ending
@@ -62,6 +61,7 @@ class Perceptron:
         return self.layers == o.layers
 
 
+# Testing
 if __name__ == '__main__':
     perceptron = Perceptron([7, 3, 7])
     print(perceptron.save(str(Path(__file__).parent) + '/', 'save'))
@@ -69,4 +69,3 @@ if __name__ == '__main__':
         str(Path(__file__).parent) + '/save.perceptron',
     )
     print(perceptron == perceptron_1)
-    

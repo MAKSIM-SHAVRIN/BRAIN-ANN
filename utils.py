@@ -9,8 +9,8 @@ UNICODE_RANGES = [
 
 
 def split_by_volumes(
-    list_for_split: list, volumes: list[int], get_rest: bool=True,
-    ) -> list[list]:
+    list_for_split: list, volumes: list[int], get_rest: bool = True,
+) -> list[list]:
     if len(list_for_split) < 2:
         raise ValueError(
             'list_for_split must contain at least two element to be splittied',
