@@ -1,7 +1,6 @@
 from json import dump, load
-from pathlib import Path
 
-from numpy import array, int8, ndarray
+from numpy import array, ndarray
 
 from layer import Layer
 from utils import check_dir_path_slash_ending
@@ -17,7 +16,7 @@ class Perceptron:
         for layer_number, neurons_number in enumerate(structure[1:]):
             self.layers.append(Layer(neurons_number, structure[layer_number]))
 
-    def __call__(self, inputs_values: ndarray[int8]) -> ndarray[int8]:
+    def __call__(self, inputs_values: ndarray) -> ndarray:
         resoults = inputs_values
         for layer in self.layers:
             resoults = layer(resoults)
@@ -53,7 +52,7 @@ class Perceptron:
         perceptron.layers = list()
         for matrix in loaded:
             layer = object.__new__(Layer)
-            layer.matrix = array(matrix, dtype=int8)
+            layer.matrix = array(matrix)
             perceptron.layers.append(layer)
         return perceptron
 
@@ -63,9 +62,5 @@ class Perceptron:
 
 # Testing
 if __name__ == '__main__':
-    perceptron = Perceptron([7, 3, 7])
-    print(perceptron.save(str(Path(__file__).parent) + '/', 'save'))
-    perceptron_1 = Perceptron.load(
-        str(Path(__file__).parent) + '/save.perceptron',
-    )
-    print(perceptron == perceptron_1)
+    perceptron = Perceptron([3, *6*[10**4], 10])
+    print(perceptron(array([0, 1, 1])))

@@ -1,5 +1,9 @@
-from numpy import array_equal, delete, heaviside, insert, int8, ndarray, sum
-from numpy.random import randint
+from numpy import array, array_equal, delete, exp, insert, ndarray, sum
+from numpy.random import uniform
+
+
+def sigmoid(x):
+    return 1 / (1 + exp(-x))
 
 
 class Layer:
@@ -8,19 +12,18 @@ class Layer:
             raise ValueError('Layer must have at least a neuron')
         if neuron_inputs_number < 2:
             raise ValueError('Neuron must have at least two non-bias inputs')
-        self.matrix = randint(
-            low=-128,
-            high=128,
+        self.matrix = uniform(
+            low=-1,
+            high=1,
             # `neuron_inputs_number + 1` is adding of weight for bias input
             size=(neurons_number, neuron_inputs_number + 1,),
-            dtype=int8,
         )
 
-    def __call__(self, inputs_values: ndarray[int8]) -> ndarray[int8]:
+    def __call__(self, inputs_values: ndarray) -> ndarray:
         # Insert bias input
         inputs_values = insert(arr=inputs_values, obj=0, values=[1])
         weighted_inputs = inputs_values * self.matrix
-        return heaviside(sum(weighted_inputs, axis=1), 0).astype(int8)
+        return sigmoid(sum(weighted_inputs, axis=1))
 
     def __repr__(self):
         return f'\n< Layer with {self.matrix.shape[0]} neurons >'
@@ -31,11 +34,10 @@ class Layer:
             arr=self.matrix,
             obj=index,
             axis=0,
-            values=randint(
-                low=-128,
-                high=128,
+            values=uniform(
+                low=-1,
+                high=1,
                 size=(neuron_inputs_number,),
-                dtype=int8,
             ),
         )
 
@@ -47,11 +49,10 @@ class Layer:
             arr=self.matrix,
             obj=self.matrix.shape[1],
             axis=1,
-            values=randint(
-                low=-128,
-                high=128,
+            values=uniform(
+                low=-1,
+                high=1,
                 size=(self.matrix.shape[0],),
-                dtype=int8,
             ),
         )
 
@@ -63,6 +64,5 @@ class Layer:
 
 
 if __name__ == '__main__':
-    layer = Layer(7, 5)
-    layer_1 = layer
-    print(layer == layer_1)
+    layer = Layer(5, 3)
+    print(layer(array([789, 90, 6])))
