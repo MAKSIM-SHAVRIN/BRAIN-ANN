@@ -49,7 +49,9 @@ class Structure:
         neuron_adress=ADRESS_POWER,
     )
     SIGNAL_NEURONS_NUMBER: int = 1
+
     TIME_INPUTS_NUMBER: int = 1
+    TIME_LIMIT_INPUTS_NUMBER: int = 1
     REFLECTIONS_INPUTS_NUMBER: int = 1
 
 
