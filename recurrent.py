@@ -8,23 +8,26 @@ from utils import (check_dir_path_slash_ending, conv_int_to_list, dict_sum,
 
 
 class Signals:
-    # Controlling signals
-    STOP_SIGNAL = [0, 0, 1]
-    SKIP_SIGNAL = [0, 1, 0]
-    REPEAT_SIGNAL = [1, 0, 0]
-    STOP_REFLECTIONS_SIGNAL = [1, 1, 1]
+    CONTROLLING_SIGNALS = [
+        'NOTHING_SIGNAL',
+        'STOP_SIGNAL',
+        'SKIP_SIGNAL',
+        'REPEAT_SIGNAL',
+        'STOP_REFLECTIONS_SIGNAL',
+    ]
 
-    NOTHING_SIGNAL = [0, 0, 0]
+    TRANSFORMING_SIGNALS = [
+        'NOTHING_SIGNAL',
 
-    # Transforming signals
-    ADD_NEURON_SIGNAL = [1, 0, 0]
-    DELETE_NEURON_SIGNAL = [0, 1, 1]
+        'ADD_NEURON_SIGNAL',
+        'DELETE_NEURON_SIGNAL',
 
-    ADD_WRITTING_MEMORY_SIGNAL = [0, 0, 1]
-    DELETE_WRITTING_MEMORY_SIGNAL = [1, 1, 0]
+        'ADD_WRITTING_MEMORY_SIGNAL',
+        'DELETE_WRITTING_MEMORY_SIGNAL',
 
-    ADD_READING_MEMORY_SIGNAL = [1, 0, 1]
-    DELETE_READING_MEMORY_SIGNAL = [0, 1, 0]
+        'ADD_READING_MEMORY_SIGNAL',
+        'DELETE_READING_MEMORY_SIGNAL',
+    ]
 
 
 class Structure:
@@ -32,22 +35,22 @@ class Structure:
     INITIAL_MIDDLE_LAYERS_STRUCTURE: list = 6*[10]
     INITIAL_READING_MEMORY_CELLS_NUMBER: int = 5
 
-    ADRESS_POWER: int = 10
+    ADRESS_POWER: int = 1
 
     MEMORY_CELL_STRUCTURE = dict(
         layer_adress=ADRESS_POWER,
         neuron_adress=ADRESS_POWER,
         weight_adress=ADRESS_POWER,
-        new_walue=8,
+        new_walue=1,
     )
     REFORMING_NEURONS_STRUCTURE = dict(
-        signal_neurons_number=3,
+        signal_neurons_number=1,
         layer_adress=ADRESS_POWER,
         neuron_adress=ADRESS_POWER,
     )
-    SIGNAL_NEURONS_NUMBER: int = 3
-    TIME_INPUTS_NUMBER: int = 5
-    REFLECTIONS_INPUTS_NUMBER: int = 8
+    SIGNAL_NEURONS_NUMBER: int = 1
+    TIME_INPUTS_NUMBER: int = 1
+    REFLECTIONS_INPUTS_NUMBER: int = 1
 
 
 class Init:
@@ -243,7 +246,7 @@ class SaveLoad:
 
 
 class Brain(Perceptron, Signals, Structure, Init, Call, SaveLoad):
-    def __init__(self, inputs_number: int = 8, outputs_number: int = 8):
+    def __init__(self, inputs_number: int = 1, outputs_number: int = 1):
         if inputs_number < 1:
             raise ValueError('Recurrent must have at least one input')
         if outputs_number < 1:
@@ -393,16 +396,4 @@ class Brain(Perceptron, Signals, Structure, Init, Call, SaveLoad):
 
 # Testing
 if __name__ == '__main__':
-    print(
-        Brain()(
-            [
-                [1, 1, 0, 1, 0, 1, 1, 1],
-                [1, 1, 0, 1, 0, 1, 1, 1],
-                [1, 1, 0, 1, 0, 1, 1, 1],
-                [1, 1, 0, 1, 0, 1, 1, 1],
-                [1, 1, 0, 1, 0, 1, 1, 1],
-                [1, 1, 0, 1, 0, 1, 1, 1],
-                [1, 1, 0, 1, 0, 1, 1, 1],
-            ],
-        ),
-    )
+    print(Brain()())
