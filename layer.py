@@ -34,11 +34,7 @@ class Layer:
             arr=self.matrix,
             obj=index,
             axis=0,
-            values=uniform(
-                low=-1,
-                high=1,
-                size=(neuron_inputs_number,),
-            ),
+            values=uniform(low=-1, high=1, size=(neuron_inputs_number,)),
         )
 
     def _add_neuron(self):
@@ -49,11 +45,7 @@ class Layer:
             arr=self.matrix,
             obj=self.matrix.shape[1],
             axis=1,
-            values=uniform(
-                low=-1,
-                high=1,
-                size=(self.matrix.shape[0],),
-            ),
+            values=uniform(low=-1, high=1, size=(self.matrix.shape[0])),
         )
 
     def _delete_weights(self, index: int):
