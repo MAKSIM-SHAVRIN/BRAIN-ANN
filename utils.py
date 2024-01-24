@@ -8,6 +8,10 @@ UNICODE_RANGES = [
 ]
 
 
+def get_element_by_decimal(sequence, decimal: float):
+    return sequence[round(decimal * (len(sequence) - 1))]
+
+
 def split_by_volumes(
     list_for_split: list, volumes: list[int], get_rest: bool = True,
 ) -> list[list]:
