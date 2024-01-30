@@ -26,7 +26,15 @@ class Layer:
         return sigmoid(sum(weighted_inputs, axis=1))
 
     def __repr__(self):
-        return f'\n< Layer with {self.matrix.shape[0]} neurons >'
+        return f'\n< Layer with {self.neurons_number} neurons >'
+
+    @property
+    def neurons_number(self):
+        return self.matrix.shape[0]
+
+    @property
+    def each_neuron_weights_number(self):
+        return self.matrix.shape[1]
 
     def _insert_neuron(self, index: int):
         neuron_inputs_number = self.matrix.shape[1]
@@ -40,6 +48,12 @@ class Layer:
     def _add_neuron(self):
         self._insert_neuron(index=self.matrix.shape[0])
 
+    def _delete_neuron(self, index: int):
+        self.matrix = delete(arr=self.matrix, obj=index, axis=0)
+
+    def _delete_last_neuron(self):
+        self._delete_neuron(self.neurons_number - 1)
+
     def _add_weights(self):
         self.matrix = insert(
             arr=self.matrix,
@@ -50,6 +64,9 @@ class Layer:
 
     def _delete_weights(self, index: int):
         self.matrix = delete(arr=self.matrix, obj=index, axis=1)
+
+    def _delete_last_weights(self):
+        self._delete_weights(self.each_neuron_weights_number - 1)
 
     def __eq__(self, o):
         return array_equal(self.matrix, o.matrix)
