@@ -8,8 +8,12 @@ UNICODE_RANGES = [
 ]
 
 
+def get_index_by_decimal(sequence, decimal: float):
+    return round(decimal * (len(sequence) - 1))
+
+
 def get_element_by_decimal(sequence, decimal: float):
-    return sequence[round(decimal * (len(sequence) - 1))]
+    return sequence[get_index_by_decimal(sequence, decimal)]
 
 
 def split_by_volumes(
@@ -76,19 +80,6 @@ def conv_list_to_int(binaries_list: list[int]) -> int:
         if digit not in [0, 1]:
             raise ValueError('List must contain just zeros and ones')
     return sum([n*2**p for p, n in enumerate(reversed(binaries_list))])
-
-
-def get_index_by_adress(sequence, adress: list[int]) -> int:
-    if len(sequence) < 2:
-        raise ValueError('Sequence must contain at least two elements')
-    fraction = conv_list_to_int(adress) / (2 ** len(adress) - 1)
-    return int(round((len(sequence) - 1) * fraction))
-
-
-def get_element_by_adress(sequence, adress: list[int]):
-    if len(sequence) < 2:
-        raise ValueError('Sequence must contain at least two elements')
-    return sequence[get_index_by_adress(sequence, adress)]
 
 
 def check_dir_path_slash_ending(dir_path: str):
