@@ -212,8 +212,31 @@ class Brain(Perceptron):
             elif signal == 'DELETE_WRITTING_MEMORY_SIGNAL':
                 _delete_writing_memory_neurons()
 
+        def _reading_memory_transform(transforming_outputs: list[float]):
+            # Nested functions
+            def _add_reading_memory_neurons():
+                for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
+                    self.layers[-1]._add_neuron()
+                self.layers[0]._add_weights()
+
+            def _delete_reading_memory_neurons():
+                if self.reading_memory_cells_number > 1:
+                    for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
+                        self.layers[-1]._delete_last_neuron()
+                    self.layers[0]._delete_last_weights()
+
+            ############################################################
+            transform_signal, layer_adress, neuron_adress = split_by_volumes(
+                list_for_split=transforming_outputs,
+                volumes=self.REFORMING_NEURONS_STRUCTURE.values(),
+                get_rest=False,
+            )
+            signal = get_element_by_decimal(
+                self.TRANSFORMING_SIGNALS,
+                transform_signal[0],
+            )
             # Add or delete reading memory neurons
-            elif signal == 'ADD_READING_MEMORY_SIGNAL':
+            if signal == 'ADD_READING_MEMORY_SIGNAL':
                 _add_reading_memory_neurons()
 
             elif signal == 'DELETE_READING_MEMORY_SIGNAL':
@@ -374,6 +397,11 @@ class Brain(Perceptron):
                         controlling_signal = get_element_by_decimal(
                             self.CONTROLLING_SIGNALS, controlling_signal,
                         )
+                        verb(f'Controlling signal: {controlling_signal}')
+
+                        # Reading memory transforming
+                        if transform:
+                            _reading_memory_transform(transforming)
 
                         # Introspecton
                         if introspect:
