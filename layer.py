@@ -74,7 +74,7 @@ class Layer:
         self.matrix[neuron_index: weight_index] = new_walue
 
     def _read_weight(self, neuron_index: int, weight_index: int):
-        return self.matrix[neuron_index: weight_index]
+        return self.matrix[neuron_index][weight_index]
 
     def __eq__(self, o):
         return array_equal(self.matrix, o.matrix)
