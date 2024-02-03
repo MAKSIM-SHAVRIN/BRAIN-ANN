@@ -2,6 +2,8 @@ from json import dump, load
 from pathlib import Path
 from time import time
 
+from numpy import array
+
 from perceptron import Perceptron
 from utils import (
     check_dir_path_slash_ending,
@@ -14,9 +16,9 @@ from utils import (
 
 class Brain(Perceptron):
     # Structure
-    INITIAL_WRITING_MEMORY_CELLS_NUMBER: int = 6
+    INITIAL_WRITING_MEMORY_CELLS_NUMBER: int = 5
     INITIAL_MIDDLE_LAYERS_STRUCTURE: list = 6*[10]
-    INITIAL_READING_MEMORY_CELLS_NUMBER: int = 89
+    INITIAL_READING_MEMORY_CELLS_NUMBER: int = 5
 
     ADRESS_POWER: int = 1
 
@@ -175,17 +177,6 @@ class Brain(Perceptron):
                     for number in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
                         self.layers[-1]._delete_neuron(index - number - 1)
 
-            def _add_reading_memory_neurons():
-                for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                    self.layers[-1]._add_neuron()
-                self.layers[0]._add_weights()
-
-            def _delete_reading_memory_neurons():
-                if self.reading_memory_cells_number > 1:
-                    for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                        self.layers[-1]._delete_last_neuron()
-                    self.layers[0]._delete_last_weights()
-
             ############################################################
             transform_signal, layer_adress, neuron_adress = split_by_volumes(
                 list_for_split=transforming_outputs,
@@ -194,7 +185,7 @@ class Brain(Perceptron):
             )
             signal = get_element_by_decimal(
                 self.TRANSFORMING_SIGNALS,
-                transform_signal,
+                transform_signal[0],
             )
             verb(f'Transforming signal: {signal}')
 
@@ -372,6 +363,13 @@ class Brain(Perceptron):
 
                         # Get outputs as list of binary signals and
                         # Split binary list to valuable binary lists
+                        inputs_list = [
+                            *inputs_values,
+                            time(),
+                            time_limit,
+                            reflections_counter,
+                            *reading_memory_inputs,
+                        ]
                         (
                             signifying_outputs,
                             controlling,
@@ -380,22 +378,14 @@ class Brain(Perceptron):
                             reading_memory,
 
                         ) = split_by_volumes(
-                                list_for_split=super().__call__(
-                                    [
-                                        *inputs_values,
-                                        time(),
-                                        time_limit,
-                                        reflections_counter,
-                                        *reading_memory_inputs,
-                                    ],
-                                ),
-                                volumes=self.outputs_structure.values(),
-                                get_rest=False,
-                            )
+                            list_for_split=super().__call__(array(inputs_list)),
+                            volumes=self.outputs_structure.values(),
+                            get_rest=False,
+                        )
 
                         # Get controlling signal
                         controlling_signal = get_element_by_decimal(
-                            self.CONTROLLING_SIGNALS, controlling_signal,
+                            self.CONTROLLING_SIGNALS, controlling[0],
                         )
                         verb(f'Controlling signal: {controlling_signal}')
 
@@ -453,7 +443,7 @@ class Brain(Perceptron):
                 reflections_counter += 1
 
             # Stop reflections loop
-            if controlling_signal == 'STOP_SIGNAL':
+            if controlling_signal != 'STOP_REFLECTIONS_SIGNAL':
                 break
         return resoults
 
@@ -541,4 +531,7 @@ class Brain(Perceptron):
 
 # Testing
 if __name__ == '__main__':
-    print(Brain()([[0], [7], [8], [9], [1], [0], [5], [6]]))
+    class BigBrain(Brain):
+        INITIAL_MIDDLE_LAYERS_STRUCTURE = 6 * [10 ** 3,]
+
+    print(BigBrain()([[789], [7], [8], [9], [1], [0], [5], [6]], verbalize=True))
