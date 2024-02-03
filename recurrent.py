@@ -117,9 +117,14 @@ class Brain(Perceptron):
         time_limit: float = -1, steps_limit: int = None,
         transform=True, introspect=True,
         just_last_resoult=False, do_not_skip_and_repeat=False,
+        verbalize=False,
     ) -> list[list[float]]:
 
         # Nested functions
+        def verb(*args, **kwargs):
+            if verbalize:
+                print(*args, **kwargs)
+
         def _transform(transforming_outputs: list[float]):
 
             # Nested functions
@@ -191,6 +196,8 @@ class Brain(Perceptron):
                 self.TRANSFORMING_SIGNALS,
                 transform_signal,
             )
+            verb(f'Transforming signal: {signal}')
+
             # Add or delete neuron
             if signal == 'ADD_NEURON_SIGNAL':
                 _add_neuron(layer_adress[0])
@@ -286,8 +293,10 @@ class Brain(Perceptron):
             ############################################################
             # Read weights
             reading_memory_inputs = _read_weights(reading_memory)
+            verb('MEMORY IS READ')
             # Write weights
             _write_weights(writting_memory)
+            verb('MEMORY IS WRITTEN')
             return reading_memory_inputs
 
         ################################################################
@@ -317,6 +326,7 @@ class Brain(Perceptron):
             while True:
                 resoults = list()
                 # Iterations
+                verb(f'Feflection number: {reflections_counter}')
                 for inputs_values in inputs:
                     if not do_not_skip_and_repeat:
                         if controlling_signal == 'SKIP_SIGNAL':
@@ -328,11 +338,13 @@ class Brain(Perceptron):
                         if time_limit != -1:
                             if time_limit < time() - start_time:
                                 controlling_signal = 'STOP_SIGNAL'
+                                verb('STOPPED BY TIME LIMIT')
                                 break
 
                         # Stop by steps limit
                         if steps_limit and steps_limit < steps_counter:
                             controlling_signal = 'STOP_SIGNAL'
+                            verb('STOPPED BY STEP LIMIT')
                             break
 
                         # Get outputs as list of binary signals and
