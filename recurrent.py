@@ -127,190 +127,130 @@ class Brain(Perceptron):
             if verbalize:
                 print(*args, **kwargs)
 
-        def _transform(transforming_outputs: list[float]):
+        # Transforming operations
+        def _add_neuron(layer_adress: float):
+            index = get_index_by_decimal(self.layers[:-1], layer_adress)
+            layer = self.layers[index]
+            layer._add_neuron()
+            # Add due weights of next layer
+            next_layer = self.layers[index + 1]
+            next_layer._add_weights()
 
-            # Nested functions
-            def _add_neuron(layer_adress: float):
-                index = get_index_by_decimal(self.layers[:-1], layer_adress)
-                layer = self.layers[index]
-                layer._add_neuron()
-                # Add due weights of next layer
+        def _delete_neuron(layer_adress: float, neuron_adress: float):
+            index = get_index_by_decimal(self.layers[:-1], layer_adress)
+            layer = self.layers[index]
+            neurons_number = layer.neurons_number
+            neuron_index = get_index_by_decimal(
+                sequence=list(range(neurons_number - 1)),
+                decimal=neuron_adress,
+            )
+            if neurons_number > 1:
+                layer._delete_neuron(neuron_index)
+                # Delete due weights of next layer
                 next_layer = self.layers[index + 1]
-                next_layer._add_weights()
+                # `1 + neuron_index` cuz remember about bias weight
+                next_layer._delete_weights(1 + neuron_index)
 
-            def _delete_neuron(layer_adress: float, neuron_adress: float):
-                index = get_index_by_decimal(self.layers[:-1], layer_adress)
-                layer = self.layers[index]
-                neurons_number = layer.neurons_number
-                neuron_index = get_index_by_decimal(
-                    sequence=list(range(neurons_number - 1)),
-                    decimal=neuron_adress,
-                )
-                if neurons_number > 1:
-                    layer._delete_neuron(neuron_index)
-                    # Delete due weights of next layer
-                    next_layer = self.layers[index + 1]
-                    # `1 + neuron_index` cuz remember about bias weight
-                    next_layer._delete_weights(1 + neuron_index)
+        def _get_last_writting_memory_index():
+            writting_memory_neurons = dict_sum(self.MEMORY_CELL_STRUCTURE)\
+                * self.writing_memory_cells_number
+            last_writting_memory_index = dict_sum(
+                dict(
+                    signifying=self.outputs_number,
+                    signal=self.SIGNAL_NEURONS_NUMBER,
+                    reforming=dict_sum(self.REFORMING_NEURONS_STRUCTURE),
+                    writing_memory=writting_memory_neurons,
+                ),
+            )
+            return last_writting_memory_index
 
-            def _get_last_writting_memory_index():
-                writting_memory_neurons = dict_sum(self.MEMORY_CELL_STRUCTURE)\
-                    * self.writing_memory_cells_number
-                last_writting_memory_index = dict_sum(
-                    dict(
-                        signifying=self.outputs_number,
-                        signal=self.SIGNAL_NEURONS_NUMBER,
-                        reforming=dict_sum(self.REFORMING_NEURONS_STRUCTURE),
-                        writing_memory=writting_memory_neurons,
-                    ),
-                )
-                return last_writting_memory_index
+        def _add_writing_memory_neurons():
+            index = _get_last_writting_memory_index()
+            for number in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
+                self.layers[-1]._insert_neuron(number + index)
 
-            def _add_writing_memory_neurons():
-                index = _get_last_writting_memory_index()
+        def _delete_writing_memory_neurons():
+            index = _get_last_writting_memory_index()
+            if self.writing_memory_cells_number > 1:
                 for number in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                    self.layers[-1]._insert_neuron(number + index)
+                    self.layers[-1]._delete_neuron(index - number - 1)
 
-            def _delete_writing_memory_neurons():
-                index = _get_last_writting_memory_index()
-                if self.writing_memory_cells_number > 1:
-                    for number in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                        self.layers[-1]._delete_neuron(index - number - 1)
+        def _add_reading_memory_neurons():
+            for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
+                self.layers[-1]._add_neuron()
+            self.layers[0]._add_weights()
 
-            ############################################################
-            transform_signal, layer_adress, neuron_adress = split_by_volumes(
-                list_for_split=transforming_outputs,
-                volumes=self.REFORMING_NEURONS_STRUCTURE.values(),
-                get_rest=False,
-            )
-            signal = get_element_by_decimal(
-                self.TRANSFORMING_SIGNALS,
-                transform_signal[0],
-            )
-            verb(f'Transforming signal: {signal}')
-
-            # Add or delete neuron
-            if signal == 'ADD_NEURON_SIGNAL':
-                _add_neuron(layer_adress[0])
-
-            elif signal == 'DELETE_NEURON_SIGNAL':
-                _delete_neuron(layer_adress[0], neuron_adress[0])
-
-            # Add or delete writting memory neurons
-            elif signal == 'ADD_WRITTING_MEMORY_SIGNAL':
-                _add_writing_memory_neurons()
-
-            elif signal == 'DELETE_WRITTING_MEMORY_SIGNAL':
-                _delete_writing_memory_neurons()
-
-        def _reading_memory_transform(transforming_outputs: list[float]):
-            # Nested functions
-            def _add_reading_memory_neurons():
+        def _delete_reading_memory_neurons():
+            if self.reading_memory_cells_number > 1:
                 for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                    self.layers[-1]._add_neuron()
-                self.layers[0]._add_weights()
+                    self.layers[-1]._delete_last_neuron()
+                self.layers[0]._delete_last_weights()
 
-            def _delete_reading_memory_neurons():
-                if self.reading_memory_cells_number > 1:
-                    for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                        self.layers[-1]._delete_last_neuron()
-                    self.layers[0]._delete_last_weights()
+        # Introspection
+        def _write_weights(writing_memory: list[float]):
+            for _ in range(self.writing_memory_cells_number):
+                (
+                    layer_adress,
+                    neuron_adress,
+                    weight_adress,
+                    new_walue,
 
-            ############################################################
-            transform_signal, layer_adress, neuron_adress = split_by_volumes(
-                list_for_split=transforming_outputs,
-                volumes=self.REFORMING_NEURONS_STRUCTURE.values(),
-                get_rest=False,
-            )
-            signal = get_element_by_decimal(
-                self.TRANSFORMING_SIGNALS,
-                transform_signal[0],
-            )
-            # Add or delete reading memory neurons
-            if signal == 'ADD_READING_MEMORY_SIGNAL':
-                _add_reading_memory_neurons()
+                    writing_memory,
 
-            elif signal == 'DELETE_READING_MEMORY_SIGNAL':
-                _delete_reading_memory_neurons()
+                ) = split_by_volumes(
+                    list_for_split=writing_memory,
+                    volumes=self.MEMORY_CELL_STRUCTURE.values(),
+                )
+                layer = get_element_by_decimal(
+                    sequence=self.layers, decimal=layer_adress[0],
+                )
+                neuron_index = get_index_by_decimal(
+                    sequence=list(range(layer.neurons_number - 1)),
+                    decimal=neuron_adress[0]
+                )
+                weight_index = get_index_by_decimal(
+                    sequence=list(
+                        range(layer.each_neuron_weights_number - 1),
+                    ),
+                    decimal=weight_adress[0],
+                )
+                layer._change_weight(
+                    neuron_index=neuron_index,
+                    weight_index=weight_index,
+                    new_walue=new_walue[0],
+                )
 
-        def _introspect(
-            writting_memory: list[float], reading_memory: list[float],
-        ) -> list[float]:
+        def _read_weights(reading_memory: list[float]) -> list[float]:
+            reading_memory_inputs = list()
+            for _ in range(self.reading_memory_cells_number):
+                (
+                    layer_adress,
+                    neuron_adress,
+                    weight_adress,
+                    new_walue,
 
-            # Nested functions
-            def _write_weights(writing_memory: list[float]):
-                for _ in range(self.writing_memory_cells_number):
-                    (
-                        layer_adress,
-                        neuron_adress,
-                        weight_adress,
-                        new_walue,
+                    reading_memory,
 
-                        writing_memory,
-
-                    ) = split_by_volumes(
-                        list_for_split=writing_memory,
-                        volumes=self.MEMORY_CELL_STRUCTURE.values(),
-                    )
-                    layer = get_element_by_decimal(
-                        sequence=self.layers, decimal=layer_adress[0],
-                    )
-                    neuron_index = get_index_by_decimal(
-                        sequence=list(range(layer.neurons_number - 1)),
-                        decimal=neuron_adress[0]
-                    )
-                    weight_index = get_index_by_decimal(
-                        sequence=list(
-                            range(layer.each_neuron_weights_number - 1),
-                        ),
-                        decimal=weight_adress[0],
-                    )
-                    layer._change_weight(
-                        neuron_index=neuron_index,
-                        weight_index=weight_index,
-                        new_walue=new_walue[0],
-                    )
-
-            def _read_weights(reading_memory: list[float]) -> list[float]:
-                reading_memory_inputs = list()
-                for _ in range(self.reading_memory_cells_number):
-                    (
-                        layer_adress,
-                        neuron_adress,
-                        weight_adress,
-                        new_walue,
-
-                        reading_memory,
-
-                    ) = split_by_volumes(
-                        list_for_split=reading_memory,
-                        volumes=self.MEMORY_CELL_STRUCTURE.values(),
-                    )
-                    layer = get_element_by_decimal(
-                        sequence=self.layers, decimal=layer_adress[0],
-                    )
-                    neuron_index = get_index_by_decimal(
-                        sequence=list(range(layer.neurons_number - 1)),
-                        decimal=neuron_adress[0]
-                    )
-                    weight_index = get_index_by_decimal(
-                        sequence=list(
-                            range(layer.each_neuron_weights_number - 1),
-                        ),
-                        decimal=weight_adress[0],
-                    )
-                    reading_memory_inputs.append(
-                        layer._read_weight(neuron_index, weight_index),
-                    )
-                return reading_memory_inputs
-
-            ############################################################
-            # Read weights
-            reading_memory_inputs = _read_weights(reading_memory)
-            verb('MEMORY IS READ')
-            # Write weights
-            _write_weights(writting_memory)
-            verb('MEMORY IS WRITTEN')
+                ) = split_by_volumes(
+                    list_for_split=reading_memory,
+                    volumes=self.MEMORY_CELL_STRUCTURE.values(),
+                )
+                layer = get_element_by_decimal(
+                    sequence=self.layers, decimal=layer_adress[0],
+                )
+                neuron_index = get_index_by_decimal(
+                    sequence=list(range(layer.neurons_number - 1)),
+                    decimal=neuron_adress[0]
+                )
+                weight_index = get_index_by_decimal(
+                    sequence=list(
+                        range(layer.each_neuron_weights_number - 1),
+                    ),
+                    decimal=weight_adress[0],
+                )
+                reading_memory_inputs.append(
+                    layer._read_weight(neuron_index, weight_index),
+                )
             return reading_memory_inputs
 
         ################################################################
@@ -391,17 +331,47 @@ class Brain(Perceptron):
 
                         # Reading memory transforming
                         if transform:
-                            _reading_memory_transform(transforming)
+                            (
+                                transform_signal,
+                                layer_adress,
+                                neuron_adress,
+
+                            ) = split_by_volumes(
+                                list_for_split=transforming,
+                                volumes=self.REFORMING_NEURONS_STRUCTURE.values(),
+                                get_rest=False,
+                            )
+                            signal = get_element_by_decimal(
+                                self.TRANSFORMING_SIGNALS,
+                                transform_signal[0],
+                            )
+                            # Add or delete reading memory neurons
+                            if signal == 'ADD_READING_MEMORY_SIGNAL':
+                                _add_reading_memory_neurons()
+
+                            elif signal == 'DELETE_READING_MEMORY_SIGNAL':
+                                _delete_reading_memory_neurons()
 
                         # Introspecton
                         if introspect:
-                            reading_memory_inputs = _introspect(
-                                writting_memory, reading_memory,
-                            )
+                            _write_weights(writting_memory)
+                            reading_memory_inputs = _read_weights(reading_memory)
 
                         # Transforming
                         if transform:
-                            _transform(transforming)
+                            # Add or delete neuron
+                            if signal == 'ADD_NEURON_SIGNAL':
+                                _add_neuron(layer_adress[0])
+
+                            elif signal == 'DELETE_NEURON_SIGNAL':
+                                _delete_neuron(layer_adress[0], neuron_adress[0])
+
+                            # Add or delete writting memory neurons
+                            elif signal == 'ADD_WRITTING_MEMORY_SIGNAL':
+                                _add_writing_memory_neurons()
+
+                            elif signal == 'DELETE_WRITTING_MEMORY_SIGNAL':
+                                _delete_writing_memory_neurons()
 
                         # Add character to list of resoults
                         if just_last_resoult:
@@ -434,6 +404,7 @@ class Brain(Perceptron):
                 elif self.inputs_number != self.outputs_number:
                     break
                 elif resoults == list():
+                    verb('RESOULTS ARE EMPTY')
                     break
                 elif just_last_resoult:
                     break
@@ -532,6 +503,6 @@ class Brain(Perceptron):
 # Testing
 if __name__ == '__main__':
     class BigBrain(Brain):
-        INITIAL_MIDDLE_LAYERS_STRUCTURE = 6 * [10 ** 3,]
+        INITIAL_MIDDLE_LAYERS_STRUCTURE = 100 * [10 ** 3,]
 
     print(BigBrain()([[789], [7], [8], [9], [1], [0], [5], [6]], verbalize=True))
