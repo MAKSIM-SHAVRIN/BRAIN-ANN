@@ -8,6 +8,26 @@ UNICODE_RANGES = [
 ]
 
 
+def property_alias(alias_name: str):
+    def decorator(prop):
+        @wraps(prop)
+        def wrapper(obj):
+            return prop(obj)
+        setattr(prop.__class__, alias_name, property(wrapper))
+        return prop
+    return decorator
+
+
+def method_alias(alias_name: str):
+    def decorator(method):
+        @wraps(method)
+        def wrapper(obj, *args, **kwargs):
+            return method(obj, *args, **kwargs)
+        setattr(method.__class__, alias_name, wrapper)
+        return method
+    return decorator
+
+
 def get_index_by_decimal(sequence, decimal: float):
     return round(decimal * (len(sequence) - 1))
 
