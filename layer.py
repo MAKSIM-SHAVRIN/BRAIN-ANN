@@ -28,7 +28,7 @@ class Layer:
         return sigmoid(sum(weighted_inputs, axis=1))
 
     def __repr__(self):
-        return f'\n< Layer with {self.neurons_number} neurons >'
+        return f'< Layer {self.inputs_number} -> {self.outputs_number} >'
 
     @property
     def neurons_number(self):
