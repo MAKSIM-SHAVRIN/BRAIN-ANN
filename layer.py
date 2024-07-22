@@ -52,7 +52,7 @@ class Layer:
             raise Exception('Can not delete last output')
         self.matrix = delete(arr=self.matrix, obj=index, axis=0)
 
-    def _pop_output(self):
+    def pop_output(self):
         if self.outputs_number == 1:
             raise Exception('Can not delete last output')
         self.delete_output(self.outputs_number - 1)
