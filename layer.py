@@ -10,11 +10,7 @@ def sigmoid(x):
 
 
 class Layer:
-    def __init__(self, neurons_number: int, neuron_inputs_number: int):
-        if not neurons_number:
-            raise ValueError('Layer must have at least a neuron')
-        if neuron_inputs_number < 2:
-            raise ValueError('Neuron must have at least two non-bias inputs')
+    def __init__(self, inputs_number: int = 1, outputs_number: int = 1):
         self.matrix = uniform(
             *VALUES_RANGE,
             # `neuron_inputs_number + 1` is adding of weight for bias
@@ -24,6 +20,7 @@ class Layer:
     def __call__(self, inputs_values: ndarray) -> ndarray:
         # Insert bias input
         inputs_values = insert(arr=inputs_values, obj=0, values=[1])
+
         weighted_inputs = inputs_values * self.matrix
         return sigmoid(sum(weighted_inputs, axis=1))
 
@@ -31,15 +28,15 @@ class Layer:
         return f'< Layer {self.inputs_number} -> {self.outputs_number} >'
 
     @property
-    def neurons_number(self):
+    def outputs_number(self):
         return self.matrix.shape[0]
 
     @property
     def inputs_number(self):
         return self.matrix.shape[1] - 1
 
-    def _insert_neuron(self, index: int):
-        neuron_inputs_number = self.matrix.shape[1]
+    def insert_output(self, index: int):
+        inputs_number = self.matrix.shape[1]
         self.matrix = insert(
             arr=self.matrix,
             obj=index,
@@ -47,16 +44,20 @@ class Layer:
             values=uniform(*VALUES_RANGE, size=(inputs_number,)),
         )
 
-    def _add_neuron(self):
-        self._insert_neuron(index=self.matrix.shape[0])
+    def append_output(self):
+        self.insert_output(index=self.matrix.shape[0])
 
-    def _delete_neuron(self, index: int):
+    def delete_output(self, index: int):
+        if self.outputs_number == 1:
+            raise Exception('Can not delete last output')
         self.matrix = delete(arr=self.matrix, obj=index, axis=0)
 
-    def _delete_last_neuron(self):
-        self._delete_neuron(self.neurons_number - 1)
+    def _pop_output(self):
+        if self.outputs_number == 1:
+            raise Exception('Can not delete last output')
+        self.delete_output(self.outputs_number - 1)
 
-    def _add_weights(self):
+    def append_input(self):
         self.matrix = insert(
             arr=self.matrix,
             obj=self.matrix.shape[1],
@@ -64,24 +65,32 @@ class Layer:
             values=uniform(*VALUES_RANGE, size=(self.matrix.shape[0])),
         )
 
-    def _delete_weights(self, index: int):
-        self.matrix = delete(arr=self.matrix, obj=index, axis=1)
+    def delete_input(self, index: int):
+        # `index+1` for we never could delete the bias
+        if self.inputs_number == 1:
+            raise Exception('Can not delete last non-bias input')
+        self.matrix = delete(arr=self.matrix, obj=index+1, axis=1)
 
-    def _delete_last_weights(self):
-        self._delete_weights(self.each_neuron_weights_number - 1)
+    def pop_input(self):
+        if self.inputs_number == 1:
+            raise Exception('Can not delete last non-bias input')
+        self.delete_input(self.matrix.shape[1] - 1)
 
-    def _change_weight(
-        self, neuron_index: int, weight_index: int, new_walue: float,
+    def write_weight(
+        self, input_index_with_bias: int, output_index: int, new_walue: float,
     ):
-        self.matrix[neuron_index: weight_index] = new_walue
+        self.matrix[output_index: input_index_with_bias] = new_walue
 
-    def _read_weight(self, neuron_index: int, weight_index: int):
-        return self.matrix[neuron_index][weight_index]
+    def read_weight(
+        self, input_index_with_bias: int, output_index: int,
+    ) -> float:
+        return self.matrix[output_index][input_index_with_bias]
 
-    def __eq__(self, o):
+    def __eq__(self, o) -> bool:
         return array_equal(self.matrix, o.matrix)
 
 
 if __name__ == '__main__':
-    layer = Layer(5, 3)
+    layer = Layer(3, 5)
+    print(layer)
     print(layer(array([789, 90, 6])))
