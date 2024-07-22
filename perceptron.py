@@ -14,7 +14,7 @@ class Perceptron:
         # but the next layer neuron's inputs number.
         self.layers = list()
         for layer_number, neurons_number in enumerate(structure[1:]):
-            self.layers.append(Layer(neurons_number, structure[layer_number]))
+            self.layers.append(Layer(structure[layer_number], neurons_number))
 
     def __call__(self, inputs_values: ndarray) -> ndarray:
         resoults = inputs_values
@@ -30,8 +30,8 @@ class Perceptron:
         structure = list()
         for number, layer in enumerate(self.layers):
             if number == 0:
-                structure.append(layer.matrix.shape[1] - 1)
-            structure.append(layer.matrix.shape[0])
+                structure.append(layer.inputs_number)
+            structure.append(layer.outputs_number)
         return structure
 
     def save(self, dir_path, file_name) -> str:
@@ -62,5 +62,6 @@ class Perceptron:
 
 # Testing
 if __name__ == '__main__':
-    perceptron = Perceptron([3, *6*[10**4], 10])
+    perceptron = Perceptron([3, *6*[10**3], 10])
+    print(perceptron)
     print(perceptron(array([0, 1, 1])))
