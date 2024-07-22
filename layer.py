@@ -35,8 +35,8 @@ class Layer:
         return self.matrix.shape[0]
 
     @property
-    def each_neuron_weights_number(self):
-        return self.matrix.shape[1]
+    def inputs_number(self):
+        return self.matrix.shape[1] - 1
 
     def _insert_neuron(self, index: int):
         neuron_inputs_number = self.matrix.shape[1]
