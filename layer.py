@@ -2,6 +2,9 @@ from numpy import array, array_equal, delete, exp, insert, ndarray, sum
 from numpy.random import uniform
 
 
+VALUES_RANGE = (-1, 1,)
+
+
 def sigmoid(x):
     return 1 / (1 + exp(-x))
 
@@ -13,10 +16,9 @@ class Layer:
         if neuron_inputs_number < 2:
             raise ValueError('Neuron must have at least two non-bias inputs')
         self.matrix = uniform(
-            low=-1,
-            high=1,
-            # `neuron_inputs_number + 1` is adding of weight for bias input
-            size=(neurons_number, neuron_inputs_number + 1,),
+            *VALUES_RANGE,
+            # `neuron_inputs_number + 1` is adding of weight for bias
+            size=(outputs_number, inputs_number + 1,),
         )
 
     def __call__(self, inputs_values: ndarray) -> ndarray:
@@ -42,7 +44,7 @@ class Layer:
             arr=self.matrix,
             obj=index,
             axis=0,
-            values=uniform(low=-1, high=1, size=(neuron_inputs_number,)),
+            values=uniform(*VALUES_RANGE, size=(inputs_number,)),
         )
 
     def _add_neuron(self):
@@ -59,7 +61,7 @@ class Layer:
             arr=self.matrix,
             obj=self.matrix.shape[1],
             axis=1,
-            values=uniform(low=-1, high=1, size=(self.matrix.shape[0])),
+            values=uniform(*VALUES_RANGE, size=(self.matrix.shape[0])),
         )
 
     def _delete_weights(self, index: int):
