@@ -16,106 +16,114 @@ from utils import (
 
 class Brain(Perceptron):
     # Structure
-    INITIAL_WRITING_MEMORY_CELLS_NUMBER: int = 5
-    INITIAL_MIDDLE_LAYERS_STRUCTURE: list = 6*[10]
-    INITIAL_READING_MEMORY_CELLS_NUMBER: int = 5
+    I_WM_O_BN = INITIAL_WRITING_MEMORY_OUTPUTS_BLOCKS_NUMBER = 5
+    I_ML_S = INITIAL_MIDDLE_LAYERS_STRUCTURE = 6*[10]
+    I_RM_IO_BN = INITIAL_READING_MEMORY_INPUTS_OUTPUTS_BLOCKS_NUMBER = 5
 
-    ADRESS_POWER: int = 1
-
-    MEMORY_CELL_STRUCTURE = dict(
-        layer_adress=ADRESS_POWER,
-        neuron_adress=ADRESS_POWER,
-        weight_adress=ADRESS_POWER,
-        new_walue=1,
+    # Dictkeys are a comments-like to better understand brain structure
+    WM_O_BS = WRITTING_MEMORY_OUTPUTS_BLOCK_STRUCTURE = dict(
+        layer_adress_ouputs_number=1,
+        neuron_adress_ouputs_number=1,
+        weight_adress_ouputs_number=1,
+        new_walue_ouputs_number=1,
     )
-    REFORMING_NEURONS_STRUCTURE = dict(
-        signal_neurons_number=1,
-        layer_adress=ADRESS_POWER,
-        neuron_adress=ADRESS_POWER,
-    )
-    SIGNAL_NEURONS_NUMBER: int = 1
 
-    TIME_INPUTS_NUMBER: int = 1
-    TIME_LIMIT_INPUTS_NUMBER: int = 1
-    REFLECTIONS_INPUTS_NUMBER: int = 1
+    # Dictkeys are a comments-like to better understand brain structure
+    RM_O_BS = READING_MEMORY_OUTPUTS_BLOCK_STRUCTURE = dict(
+        layer_adress_ouputs_number=1,
+        neuron_adress_ouputs_number=1,
+        weight_adress_ouputs_number=1,
+    )
+
+    # Dictkeys are a comments-like to better understand brain structure
+    T_O_BS = TRANSFORMING_OUTPUTS_BLOCK_STRUCTURE = dict(
+        transforming_signal_ouputs_number=1,
+        layer_adress_ouputs_number=1,
+        neuron_adress_ouputs_number=1,
+    )
+    TES_I_N = TRANSFORMING_ERROR_SIGNAL_INPUTS_NUMBER = 1
+    CS_O_N = CONTROLLING_SIGNAL_OUTPUTS_NUMBER = 1
+    T_I_N = TIME_INPUTS_NUMBER = 1
+    TL_I_N = TIME_LIMIT_INPUTS_NUMBER = 1
+    R_I_N = REFLECTIONS_INPUTS_NUMBER = 1
 
     # Signals
     CONTROLLING_SIGNALS = [
-        'NOTHING_SIGNAL',
-        'STOP_SIGNAL',
-        'SKIP_SIGNAL',
-        'REPEAT_SIGNAL',
-        'STOP_REFLECTIONS_SIGNAL',
+        'NOTHING',
+        'SKIP',
+        'REPEAT',
+        'STOP_REFLECTIONS',
+        'STOP',
     ]
 
     TRANSFORMING_SIGNALS = [
-        'NOTHING_SIGNAL',
+        'NOTHING',
 
-        'ADD_NEURON_SIGNAL',
-        'DELETE_NEURON_SIGNAL',
+        'APPEND_OUTPUT',
+        'DELETE_OUTPUT',
 
-        'ADD_WRITTING_MEMORY_SIGNAL',
-        'DELETE_WRITTING_MEMORY_SIGNAL',
+        'APPEND_WRITTING_MEMORY_OUTPUTS_BLOCK',
+        'POP_WRITTING_MEMORY_OUTPUTS_BLOCK',
 
-        'ADD_READING_MEMORY_SIGNAL',
-        'DELETE_READING_MEMORY_SIGNAL',
+        'APPEND_READING_MEMORY_INPUTS_OUTPUTS_BLOCK',
+        'POP_READING_MEMORY_INPUTS_OUTPUTS_BLOCK',
     ]
+    APPEND_RM_IO_B_SIGNAL = TRANSFORMING_SIGNALS[5]
+    POP_RM_IO_B_SIGNAL = TRANSFORMING_SIGNALS[6]
 
     # Methods
     def __init__(self, inputs_number: int = 1, outputs_number: int = 1):
         # Nested functions
-        def _initial_inputs_number() -> int:
+        def _count_initial_perceptron_inputs_number() -> int:
             perceptron_inputs_number = dict_sum(
+                # Dictkeys are a comments-like...
+                # ...to better understand brain structure
                 dict(
-                    signifying=self.inputs_number,
-                    time=self.TIME_INPUTS_NUMBER,
-                    time_limit=self.TIME_LIMIT_INPUTS_NUMBER,
-                    reflections_counter=self.REFLECTIONS_INPUTS_NUMBER,
-                    reading_memory=self.INITIAL_READING_MEMORY_CELLS_NUMBER,
+                    signifying_inputs_number=inputs_number,
+                    time_inputs_number=self.T_I_N,
+                    time_limit_inputs_number=self.TL_I_N,
+                    transforming_error_signal_inpts_number=self.TES_I_N,
+                    reflections_counter_inputs_number=self.R_I_N,
+                    reading_memory_inputs_number=self.I_RM_IO_BN,
                 ),
             )
             return perceptron_inputs_number
 
-        def _initial_outputs_number() -> int:
-            memory_cell_neurons_number = dict_sum(self.MEMORY_CELL_STRUCTURE)
-            w_memory_neurons_number = self.INITIAL_WRITING_MEMORY_CELLS_NUMBER\
-                * memory_cell_neurons_number
-            r_memory_neurons_number = self.INITIAL_READING_MEMORY_CELLS_NUMBER\
-                * memory_cell_neurons_number
+        def _count_initial_perceptron_outputs_number() -> int:
+            w_memory_outputs_number = self.I_WM_O_BN * dict_sum(self.WM_O_BS)
+            r_memory_outputs_number = self.I_RM_IO_BN * dict_sum(self.RM_O_BS)
 
             perceptron_outputs_number = dict_sum(
+                # Dictkeys are a comments-like...
+                # ...to better understand brain structure
                 dict(
-                    signifying=self.outputs_number,
-                    signal=self.SIGNAL_NEURONS_NUMBER,
-                    reforming=dict_sum(self.REFORMING_NEURONS_STRUCTURE),
-                    writing_memory=w_memory_neurons_number,
-                    reading_memory=r_memory_neurons_number,
+                    signifying_outputs_number=outputs_number,
+                    controlling_signal_outputs_number=self.CS_O_N,
+                    transforming_outputs_number=dict_sum(self.T_O_BS),
+                    writing_memory_outputs_number=w_memory_outputs_number,
+                    reading_memory_outputs_number=r_memory_outputs_number,
                 ),
             )
             return perceptron_outputs_number
 
-        def _initial_perceptron_structure():
-            structure = [
-                _initial_inputs_number(),
+        def _count_initial_perceptron_structure():
+            initial_perceptron_structure = [
+                _count_initial_perceptron_inputs_number(),
                 *self.INITIAL_MIDDLE_LAYERS_STRUCTURE,
-                _initial_outputs_number(),
+                _count_initial_perceptron_outputs_number(),
             ]
-            return structure
+            return initial_perceptron_structure
 
         ################################################################
-        if inputs_number < 1:
-            raise ValueError('Recurrent must have at least one input')
-        if outputs_number < 1:
-            raise ValueError('Recurrent must have at least one output')
 
         self.inputs_number = inputs_number
         self.outputs_number = outputs_number
 
-        super().__init__(_initial_perceptron_structure())
+        super().__init__(_count_initial_perceptron_structure())
         return None  # Added for visual end of the method
 
     def __call__(
-        self, inputs: list[list[float]],
+        self, input_values_iterator,
         time_limit: float = -1, steps_limit: int = None,
         transform=True, introspect=True,
         just_last_resoult=False, do_not_skip_and_repeat=False,
@@ -127,133 +135,173 @@ class Brain(Perceptron):
             if verbalize:
                 print(*args, **kwargs)
 
-        # Transforming operations
-        def _add_neuron(layer_adress: float):
-            index = get_index_by_decimal(self.layers[:-1], layer_adress)
+        def if_transform(method):
+            def wrapper(*args, **kwargs):
+                if transform:
+                    method(*args, **kwargs)
+            return wrapper
+
+        def if_introspect(method):
+            def wrapper(*args, **kwargs):
+                if introspect:
+                    method(*args, **kwargs)
+            return wrapper
+
+        @if_transform
+        def _append_output_to_layer(layer_adress: float):
+            # Can not append outputs to last layer...
+            # ...cuz it has its own special structure
+            layers_excluding_last = self.layers[:-1]
+            index = get_index_by_decimal(layers_excluding_last, layer_adress)
             layer = self.layers[index]
-            layer._add_neuron()
-            # Add due weights of next layer
+            layer.append_output()
+            # Add due inputs of next layer
             next_layer = self.layers[index + 1]
-            next_layer._add_weights()
+            next_layer.append_input()
 
-        def _delete_neuron(layer_adress: float, neuron_adress: float):
-            index = get_index_by_decimal(self.layers[:-1], layer_adress)
+        @if_transform
+        def _delete_output_from_layer(
+            layer_adress: float, output_adress: float,
+        ):
+            # Can not delete outputs from last layer...
+            # ...cuz it has its own special structure
+            layers_excluding_last = self.layers[:-1]
+            index = get_index_by_decimal(layers_excluding_last, layer_adress)
             layer = self.layers[index]
-            neurons_number = layer.neurons_number
-            neuron_index = get_index_by_decimal(
-                sequence=list(range(neurons_number - 1)),
-                decimal=neuron_adress,
+            outputs_number = layer.outputs_number
+            if outputs_number == 1:
+                raise Exception('Can not delete only output of layer')
+            output_index = get_index_by_decimal(
+                sequence=list(range(outputs_number)),
+                decimal=output_adress,
             )
-            if neurons_number > 1:
-                layer._delete_neuron(neuron_index)
-                # Delete due weights of next layer
-                next_layer = self.layers[index + 1]
-                # `1 + neuron_index` cuz remember about bias weight
-                next_layer._delete_weights(1 + neuron_index)
+            layer.delete_output(output_index)
+            # Delete due weights of next layer
+            next_layer = self.layers[index + 1]
+            # `1 + neuron_index` cuz remember about bias weight
+            next_layer.delete_input(1 + output_index)
 
-        def _get_last_writting_memory_index():
-            writting_memory_neurons = dict_sum(self.MEMORY_CELL_STRUCTURE)\
-                * self.writing_memory_cells_number
-            last_writting_memory_index = dict_sum(
+        def _count_index_after_last_writting_memory_output():
+            w_memory_outputs_number = dict_sum(self.WM_O_BS) * self.WM_O_BN
+            index_after_last_writting_memory_output = dict_sum(
+                # Dictkeys are a comments-like...
+                # ...to better understand brain structure
                 dict(
-                    signifying=self.outputs_number,
-                    signal=self.SIGNAL_NEURONS_NUMBER,
-                    reforming=dict_sum(self.REFORMING_NEURONS_STRUCTURE),
-                    writing_memory=writting_memory_neurons,
+                    signifying_outputs_number=self.outputs_number,
+                    controlling_signal_outputs_number=self.CS_O_N,
+                    transforming_outputs_number=dict_sum(self.T_O_BS),
+                    writing_memory_outputs_number=w_memory_outputs_number,
+                    # don` use final reading_memory_outputs_number...
+                    # ...cuz we don` need it
                 ),
             )
-            return last_writting_memory_index
+            return index_after_last_writting_memory_output
 
-        def _add_writing_memory_neurons():
-            index = _get_last_writting_memory_index()
-            for number in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                self.layers[-1]._insert_neuron(number + index)
+        @if_transform
+        def _append_writing_memory_outputs_block():
+            index = _count_index_after_last_writting_memory_output()
+            for number in range(dict_sum(self.WM_O_BS)):
+                self.last_layer.insert_output(number + index)
 
-        def _delete_writing_memory_neurons():
-            index = _get_last_writting_memory_index()
-            if self.writing_memory_cells_number > 1:
-                for number in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                    self.layers[-1]._delete_neuron(index - number - 1)
+        @if_transform
+        def _pop_writing_memory_outputs_block():
+            if self.writing_memory_outputs_blocks_number == 1:
+                raise Exception(
+                    'Can not delete only writting memory outputs block',
+                )
+            index = _count_index_after_last_writting_memory_output()
+            for number in range(dict_sum(self.WM_O_BS)):
+                self.last_layer.delete_output(index - number - 1)
 
-        def _add_reading_memory_neurons():
-            for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                self.layers[-1]._add_neuron()
-            self.layers[0]._add_weights()
+        @if_transform
+        def _append_reading_memory_outputs_block():
+            for _ in range(dict_sum(self.RM_O_BS)):
+                self.last_layer.append_output()
+            # Add due reading memory input
+            self.first_layer.append_input()
 
-        def _delete_reading_memory_neurons():
-            if self.reading_memory_cells_number > 1:
-                for _ in range(dict_sum(self.MEMORY_CELL_STRUCTURE)):
-                    self.layers[-1]._delete_last_neuron()
-                self.layers[0]._delete_last_weights()
+        @if_transform
+        def _pop_reading_memory_outputs_block():
+            if self.reading_memory_outputs_blocks_number == 1:
+                raise Exception(
+                    'Can not delete only reading memory outputs block',
+                )
+            for _ in range(dict_sum(self.RM_O_BS)):
+                self.last_layer.pop_output()
+            # Add due reading memory input
+            self.first_layer.pop_input()
 
-        # Introspection
-        def _write_weights(writing_memory: list[float]):
-            for _ in range(self.writing_memory_cells_number):
+        @if_introspect
+        def _write_weights(writing_memory_outputs_values: list[float]):
+            for _ in range(self.writing_memory_outputs_blocks_number):
                 (
-                    layer_adress,
-                    neuron_adress,
-                    weight_adress,
+                    layer_adress_value,
+                    output_adress_value,
+                    input_adress_value,
                     new_walue,
 
-                    writing_memory,
+                    # rest values for next splitting by split_by_volumes
+                    writing_memory_outputs_values,
 
                 ) = split_by_volumes(
-                    list_for_split=writing_memory,
-                    volumes=self.MEMORY_CELL_STRUCTURE.values(),
+                    list_for_split=writing_memory_outputs_values,
+                    volumes=self.WM_O_BS.values(),
                 )
-                layer = get_element_by_decimal(
-                    sequence=self.layers, decimal=layer_adress[0],
+                layer = get_element_by_decimal(self.layers, layer_adress_value)
+
+                output_index = get_index_by_decimal(
+                    sequence=list(range(layer.outputs_number)),
+                    decimal=output_adress_value,
                 )
-                neuron_index = get_index_by_decimal(
-                    sequence=list(range(layer.neurons_number - 1)),
-                    decimal=neuron_adress[0]
+                input_index = get_index_by_decimal(
+                    # use inputs number + 1 cuz we need all outputs...
+                    # ...including bias
+                    sequence=list(range(layer.inputs_number + 1)),
+                    decimal=input_adress_value,
                 )
-                weight_index = get_index_by_decimal(
-                    sequence=list(
-                        range(layer.each_neuron_weights_number - 1),
-                    ),
-                    decimal=weight_adress[0],
-                )
-                layer._change_weight(
-                    neuron_index=neuron_index,
-                    weight_index=weight_index,
-                    new_walue=new_walue[0],
+                layer.write_weight(
+                    input_index_with_bias=input_index,
+                    output_index=output_index,
+                    new_walue=new_walue,
                 )
 
-        def _read_weights(reading_memory: list[float]) -> list[float]:
-            reading_memory_inputs = list()
-            for _ in range(self.reading_memory_cells_number):
+        @if_introspect
+        def _read_weights(
+            reading_memory_outputs_values: list[float],
+        ) -> list[float]:
+            reading_memory_inputs_values = list()
+            for _ in range(self.reading_memory_outputs_blocks_number):
                 (
-                    layer_adress,
-                    neuron_adress,
-                    weight_adress,
-                    new_walue,
+                    layer_adress_value,
+                    output_adress_value,
+                    input_adress_value,
 
-                    reading_memory,
+                    # rest values for next splitting by split_by_volumes
+                    reading_memory_outputs_values,
 
                 ) = split_by_volumes(
-                    list_for_split=reading_memory,
-                    volumes=self.MEMORY_CELL_STRUCTURE.values(),
+                    list_for_split=reading_memory_outputs_values,
+                    volumes=self.RM_O_BS.values(),
                 )
-                layer = get_element_by_decimal(
-                    sequence=self.layers, decimal=layer_adress[0],
+                layer = get_element_by_decimal(self.layers, layer_adress_value)
+
+                output_index = get_index_by_decimal(
+                    sequence=list(range(layer.outputs_number)),
+                    decimal=output_adress_value,
                 )
-                neuron_index = get_index_by_decimal(
-                    sequence=list(range(layer.neurons_number - 1)),
-                    decimal=neuron_adress[0]
+                input_index = get_index_by_decimal(
+                    # use inputs number + 1 cuz we need all outputs...
+                    # ...including bias
+                    sequence=list(range(layer.inputs_number + 1)),
+                    decimal=input_adress_value,
                 )
-                weight_index = get_index_by_decimal(
-                    sequence=list(
-                        range(layer.each_neuron_weights_number - 1),
-                    ),
-                    decimal=weight_adress[0],
+                reading_memory_inputs_values.append(
+                    layer.read_weight(input_index, output_index),
                 )
-                reading_memory_inputs.append(
-                    layer._read_weight(neuron_index, weight_index),
-                )
-            return reading_memory_inputs
+            return reading_memory_inputs_values
 
         ################################################################
+
         # Start of timer
         if time_limit != -1:
             start_time = time()
@@ -263,17 +311,18 @@ class Brain(Perceptron):
             steps_counter = 0
 
         # initial controlling signal is always do nothing
-        controlling_signal = 'NOTHING_SIGNAL'
+        controlling_signal = 'NOTHING'
 
-        # Save initial request for use it if reflections stopped
-        initial_inputs = inputs
+        # Fill initial reading_memory_inputs_values by zero values
+        reading_memory_inputs_values = [0,] * self.RM_O_BN
 
-        # Fill initial reading_memory_inputs by zero values
-        reading_memory_inputs = [0,] * self.reading_memory_cells_number
+        # The initial transforming_error_signal_inpts_values = 0...
+        # ...means no error
+        transforming_error_signal_inpts_values = 0
 
         # Reflections loop
         while True:
-            inputs = initial_inputs
+            signifying_inputs_values_sqnce = input_values_iterator
 
             # Reflections
             reflections_counter = 0
@@ -281,103 +330,112 @@ class Brain(Perceptron):
                 resoults = list()
                 # Iterations
                 verb(f'Feflection number: {reflections_counter}')
-                for inputs_values in inputs:
+                for signiying_inputs_values in signifying_inputs_values_sqnce:
                     if not do_not_skip_and_repeat:
-                        if controlling_signal == 'SKIP_SIGNAL':
-                            controlling_signal = 'NOTHING_SIGNAL'
+                        if controlling_signal == 'SKIP':
+                            controlling_signal = 'NOTHING'
                             continue
                     # Repeating
                     while True:
                         # Stop by time limit
                         if time_limit != -1:
                             if time_limit < time() - start_time:
-                                controlling_signal = 'STOP_SIGNAL'
+                                controlling_signal = 'STOP'
                                 verb('STOPPED BY TIME LIMIT')
                                 break
 
                         # Stop by steps limit
                         if steps_limit and steps_limit < steps_counter:
-                            controlling_signal = 'STOP_SIGNAL'
+                            controlling_signal = 'STOP'
                             verb('STOPPED BY STEP LIMIT')
                             break
 
                         # Get outputs as list of binary signals and
                         # Split binary list to valuable binary lists
-                        inputs_list = [
-                            *inputs_values,
+                        inputs_values_list = [
+                            *signiying_inputs_values,
                             time(),
                             time_limit,
+                            transforming_error_signal_inpts_values,
                             reflections_counter,
-                            *reading_memory_inputs,
+                            *reading_memory_inputs_values,
                         ]
                         (
-                            signifying_outputs,
-                            controlling,
-                            transforming,
-                            writting_memory,
-                            reading_memory,
+                            signifying_outputs_values,
+                            controlling_signal_outputs_values,
+                            transforming_signal_outputs_values,
+                            writting_memory_outputs_values,
+                            reading_memory_outputs_values,
 
                         ) = split_by_volumes(
-                            list_for_split=super().__call__(array(inputs_list)),
+                            list_for_split=super().__call__(
+                                array(inputs_values_list),
+                            ),
                             volumes=self.outputs_structure.values(),
                             get_rest=False,
                         )
 
                         # Get controlling signal
                         controlling_signal = get_element_by_decimal(
-                            self.CONTROLLING_SIGNALS, controlling[0],
+                            self.CONTROLLING_SIGNALS,
+                            controlling_signal_outputs_values,
                         )
                         verb(f'Controlling signal: {controlling_signal}')
 
                         # Reading memory transforming
-                        if transform:
-                            (
-                                transform_signal,
-                                layer_adress,
-                                neuron_adress,
+                        (
+                            transform_signal_outputs_values,
+                            layer_adress_outputs_values,
+                            output_adress_outputs_values,
 
-                            ) = split_by_volumes(
-                                list_for_split=transforming,
-                                volumes=self.REFORMING_NEURONS_STRUCTURE.values(),
-                                get_rest=False,
+                        ) = split_by_volumes(
+                            list_for_split=transforming_signal_outputs_values,
+                            volumes=self.T_O_BS.values(),
+                            get_rest=False,
+                        )
+                        signal = get_element_by_decimal(
+                            self.TRANSFORMING_SIGNALS,
+                            transforming_signal_outputs_values,
+                        )
+
+                        reading_memory_inputs_values = _read_weights(
+                            reading_memory_outputs_values,
+                        )
+
+                        # Add or delete reading memory neurons
+                        if signal == self.APPEND_RM_IO_B_SIGNAL:
+                            _append_reading_memory_outputs_block()
+
+                        elif signal == self.POP_RM_IO_B_SIGNAL:
+                            _pop_reading_memory_outputs_block()
+
+                        # Introspection
+                        _write_weights(writting_memory_outputs_values)
+
+                        # Add or delete neuron
+                        if signal == 'APPEND_OUTPUT':
+                            _append_output_to_layer(
+                                layer_adress_outputs_values,
                             )
-                            signal = get_element_by_decimal(
-                                self.TRANSFORMING_SIGNALS,
-                                transform_signal[0],
+
+                        elif signal == 'DELETE_OUTPUT':
+                            _delete_output_from_layer(
+                                layer_adress_outputs_values,
+                                output_adress_outputs_values,
                             )
-                            # Add or delete reading memory neurons
-                            if signal == 'ADD_READING_MEMORY_SIGNAL':
-                                _add_reading_memory_neurons()
 
-                            elif signal == 'DELETE_READING_MEMORY_SIGNAL':
-                                _delete_reading_memory_neurons()
+                        # Add or delete writting memory neurons
+                        elif signal == 'APPEND_WRITTING_MEMORY_OUTPUTS_BLOCK':
+                            _append_writing_memory_outputs_block()
 
-                        # Introspecton
-                        if introspect:
-                            _write_weights(writting_memory)
-                            reading_memory_inputs = _read_weights(reading_memory)
-
-                        # Transforming
-                        if transform:
-                            # Add or delete neuron
-                            if signal == 'ADD_NEURON_SIGNAL':
-                                _add_neuron(layer_adress[0])
-
-                            elif signal == 'DELETE_NEURON_SIGNAL':
-                                _delete_neuron(layer_adress[0], neuron_adress[0])
-
-                            # Add or delete writting memory neurons
-                            elif signal == 'ADD_WRITTING_MEMORY_SIGNAL':
-                                _add_writing_memory_neurons()
-
-                            elif signal == 'DELETE_WRITTING_MEMORY_SIGNAL':
-                                _delete_writing_memory_neurons()
+                        elif signal == 'POP_WRITTING_MEMORY_OUTPUTS_BLOCK':
+                            _pop_writing_memory_outputs_block()
 
                         # Add character to list of resoults
                         if just_last_resoult:
-                            resoults = [signifying_outputs,]
+                            resoults = [signifying_outputs_values,]
                         else:
-                            resoults.append(signifying_outputs)
+                            resoults.append(signifying_outputs_values)
 
                         # Increase steps counter
                         if steps_limit:
@@ -386,19 +444,19 @@ class Brain(Perceptron):
                         # Stop repeating
                         if do_not_skip_and_repeat:
                             break
-                        if controlling_signal != 'REPEAT_SIGNAL':
+                        if controlling_signal != 'REPEAT':
                             break
 
                     # Stop iterations
-                    if controlling_signal == 'STOP_SIGNAL':
+                    if controlling_signal == 'STOP':
                         break
-                    elif controlling_signal == 'STOP_REFLECTIONS_SIGNAL':
+                    elif controlling_signal == 'STOP_REFLECTIONS':
                         break
 
                 # Stop reflection
-                if controlling_signal == 'STOP_SIGNAL':
+                if controlling_signal == 'STOP':
                     break
-                elif controlling_signal == 'STOP_REFLECTIONS_SIGNAL':
+                elif controlling_signal == 'STOP_REFLECTIONS':
                     break
                 # Resoults are empty or not enough for the next reflection
                 elif self.inputs_number != self.outputs_number:
@@ -410,54 +468,66 @@ class Brain(Perceptron):
                     break
 
                 # Prepare request for new reflection from results
-                inputs = resoults
+                signifying_inputs_values_sqnce = resoults
                 reflections_counter += 1
 
             # Stop reflections loop
-            if controlling_signal != 'STOP_REFLECTIONS_SIGNAL':
+            if controlling_signal != 'STOP_REFLECTIONS':
                 break
         return resoults
 
     @property
-    def reading_memory_cells_number(self) -> int:
-        return self.structure[0]\
+    def first_layer(self):
+        return self.layers[0]
+
+    @property
+    def last_layer(self):
+        return self.layers[-1]
+
+    @property
+    def reading_memory_outputs_blocks_number(self) -> int:
+        return self.first_layer.inputs_number\
             - self.inputs_number\
             - self.TIME_INPUTS_NUMBER\
             - self.TIME_LIMIT_INPUTS_NUMBER\
+            - self.TRANSFORMING_ERROR_SIGNAL_INPUTS_NUMBER\
             - self.REFLECTIONS_INPUTS_NUMBER
+    # aliasing reading_memory_outputs_blocks_number
+    RM_O_BN = reading_memory_outputs_blocks_number
 
     @property
-    def writing_memory_cells_number(self) -> int:
-        memory_cell_neurons_number = dict_sum(self.MEMORY_CELL_STRUCTURE)
-        reading_memory_neurons_number = self.reading_memory_cells_number\
-            * memory_cell_neurons_number
-        writing_memory_neurons_number = self.structure[-1]\
+    def writing_memory_outputs_blocks_number(self) -> int:
+        reading_memory_outputs_number = self.RM_O_BN * dict_sum(self.RM_O_BS)
+        writing_memory_outputs_number = self.last_layer.outputs_number\
             - self.outputs_number\
-            - self.SIGNAL_NEURONS_NUMBER\
-            - dict_sum(self.REFORMING_NEURONS_STRUCTURE)\
-            - reading_memory_neurons_number
-        resoult = writing_memory_neurons_number\
-            / dict_sum(self.MEMORY_CELL_STRUCTURE)
+            - self.CONTROLLING_SIGNAL_OUTPUTS_NUMBER\
+            - dict_sum(self.TRANSFORMING_OUTPUTS_BLOCK_STRUCTURE)\
+            - reading_memory_outputs_number
+        resoult = writing_memory_outputs_number / dict_sum(self.WM_O_BS)
         return round(resoult)
+    # aliasing writing_memory_outputs_blocks_number
+    WM_O_BN = writing_memory_outputs_blocks_number
 
     @property
     def outputs_structure(self) -> dict:
-        writing_memory_neurons = self.writing_memory_cells_number\
-            * dict_sum(self.MEMORY_CELL_STRUCTURE)
-        reading_memory_neurons = self.reading_memory_cells_number\
-            * dict_sum(self.MEMORY_CELL_STRUCTURE)
+        writing_memory_outputs_number = self.WM_O_BN * dict_sum(self.WM_O_BS)
+        reading_memory_outputs_number = self.RM_O_BN * dict_sum(self.RM_O_BS)
+        # Dictkeys are a comments-like...
+        # ...to better understand brain structure
         return dict(
-            signifying_outputs=self.outputs_number,
-            signal_neurons=self.SIGNAL_NEURONS_NUMBER,
-            reforming_neurons=dict_sum(self.REFORMING_NEURONS_STRUCTURE),
-            writing_memory_neurons=writing_memory_neurons,
-            reading_memory_neurons=reading_memory_neurons,
+            signifying_outputs_number=self.outputs_number,
+            controlling_signal_outputs_number=self.CS_O_N,
+            transforming_outputs_number=dict_sum(self.T_O_BS),
+            writing_memory_outputs_number=writing_memory_outputs_number,
+            reading_memory_outputs_number=reading_memory_outputs_number,
         )
+    # aliasing outputs_structure
+    O_S = outputs_structure
 
-    def save(self, dir_path: str, file_name: str) -> str:
+    def save(self, dir_path: str, file_name_without_extension: str) -> str:
         check_dir_path_slash_ending(dir_path)
 
-        file = f'{dir_path}{file_name}.recurrent'
+        file = f'{dir_path}{file_name_without_extension}.recurrent'
         with open(file, mode='w', encoding='ascii') as filebuffer:
             dump(
                 obj=dict(
@@ -466,7 +536,7 @@ class Brain(Perceptron):
                 ),
                 fp=filebuffer,
             )
-        super().save(dir_path, file_name)
+        super().save(dir_path, file_name_without_extension)
         return file
 
     @classmethod
@@ -489,12 +559,12 @@ class Brain(Perceptron):
             + f'structure: {self.structure}\n'\
             + f'{self.inputs_number} inputs\n'\
             + f'{self.outputs_number} outputs\n'\
-            + f'{self.reading_memory_cells_number} reading memory cells\n'\
-            + f'{self.writing_memory_cells_number} writting memory cells\n'\
+            + f'{self.RM_O_BN} reading memory outputs blocks number\n'\
+            + f'{self.WM_O_BN} writting memory outputs blocks number\n'\
             + '>'
         return repr_string
 
-    def __eq__(self, o):
+    def __eq__(self, o) -> bool:
         return self.layers == o.layers\
             and self.inputs_number == o.inputs_number\
             and self.outputs_number == o.outputs_number
@@ -505,4 +575,9 @@ if __name__ == '__main__':
     class BigBrain(Brain):
         INITIAL_MIDDLE_LAYERS_STRUCTURE = 100 * [10 ** 3,]
 
-    print(BigBrain()([[789], [7], [8], [9], [1], [0], [5], [6]], verbalize=True))
+    print(
+        BigBrain()(
+            [[789], [7], [8], [9], [1], [0], [5], [6]],
+            verbalize=True
+        ),
+    )
