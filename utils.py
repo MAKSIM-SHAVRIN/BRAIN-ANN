@@ -37,29 +37,20 @@ def get_element_by_decimal(sequence, decimal: float):
 
 
 def split_by_volumes(
-    list_for_split: list, volumes: list[int], get_rest: bool = True,
+    list_for_split: list, volumes: list[int],
+    get_rest: bool = True, extract_single_values: bool = True,
 ) -> list[list]:
-    if len(list_for_split) < 2:
-        raise ValueError(
-            'list_for_split must contain at least two element to be splittied',
-        )
-    if len(volumes) < 2:
-        raise ValueError('volumes must contain at least two splitting values')
-    if 0 in volumes:
-        raise ValueError('Every resoult list must have an element at least')
-    if len(list_for_split) < sum(volumes):
-        # You can`t split a coin to two stacks
-        raise ValueError(
-            'list_for_split length must be longer or equal to volumes length',
-        )
-    resoult_lists = list()
+    resoults_list = list()
     for volume in volumes:
-        resoult_lists.append(list_for_split[:volume])
+        resoult = list_for_split[:volume]
+        if volume == 1 and extract_single_values:
+            resoult = resoult.pop()
+        resoults_list.append(resoult)
         list_for_split = list_for_split[volume:]
     # Add the rest of splited list if it is
     if get_rest:
-        resoult_lists.append(list_for_split)
-    return resoult_lists
+        resoults_list.append(list_for_split)
+    return resoults_list
 
 
 def get_unicode_characters_by_ranges(ranges: list[tuple[int]]) -> str:
