@@ -18,12 +18,14 @@ def method_alias(alias_name: str):
     return decorator
 
 
-def get_index_by_decimal(sequence, decimal: float):
+def get_index_by_decimal(sequence, decimal: float) -> int:
     return round(decimal * (len(sequence) - 1))
 
 
 def get_element_by_decimal(sequence, decimal: float):
-    return sequence[get_index_by_decimal(sequence, decimal)]
+    index = get_index_by_decimal(sequence, decimal)
+    element = sequence[index]
+    return element
 
 
 def split_by_volumes(
@@ -34,7 +36,7 @@ def split_by_volumes(
     for volume in volumes:
         resoult = list_for_split[:volume]
         if volume == 1 and extract_single_values:
-            resoult = resoult.pop()
+            resoult = resoult[-1]
         resoults_list.append(resoult)
         list_for_split = list_for_split[volume:]
     # Add the rest of splited list if it is
