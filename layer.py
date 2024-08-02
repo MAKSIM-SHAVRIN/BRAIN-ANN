@@ -1,6 +1,12 @@
 from numpy import array, array_equal, delete, exp, insert, ndarray, sum
 from numpy.random import uniform
 
+import warnings
+
+
+# suppress warnings
+warnings.filterwarnings('ignore')
+
 
 VALUES_RANGE = (-1, 1,)
 
