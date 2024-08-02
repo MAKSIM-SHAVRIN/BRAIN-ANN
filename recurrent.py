@@ -23,8 +23,8 @@ class Brain(Perceptron):
     # Dictkeys are a comments-like to better understand brain structure
     WM_O_BS = WRITTING_MEMORY_OUTPUTS_BLOCK_STRUCTURE = dict(
         layer_adress_ouputs_number=1,
-        neuron_adress_ouputs_number=1,
-        weight_adress_ouputs_number=1,
+        output_adress_ouputs_number=1,
+        input_adress_ouputs_number=1,
         new_value_sign_outputs_number=1,
         new_walue_ouputs_number=1,
     )
@@ -32,15 +32,15 @@ class Brain(Perceptron):
     # Dictkeys are a comments-like to better understand brain structure
     RM_O_BS = READING_MEMORY_OUTPUTS_BLOCK_STRUCTURE = dict(
         layer_adress_ouputs_number=1,
-        neuron_adress_ouputs_number=1,
-        weight_adress_ouputs_number=1,
+        output_adress_ouputs_number=1,
+        input_adress_ouputs_number=1,
     )
 
     # Dictkeys are a comments-like to better understand brain structure
     T_O_BS = TRANSFORMING_OUTPUTS_BLOCK_STRUCTURE = dict(
         transforming_signal_ouputs_number=1,
         layer_adress_ouputs_number=1,
-        neuron_adress_ouputs_number=1,
+        output_adress_ouputs_number=1,
     )
     TES_I_N = TRANSFORMING_ERROR_SIGNAL_INPUTS_NUMBER = 1
     CS_O_N = CONTROLLING_SIGNAL_OUTPUTS_NUMBER = 1
@@ -130,19 +130,18 @@ class Brain(Perceptron):
         just_last_resoult=False, do_not_skip_and_repeat=False,
         verbalize=False,
     ) -> list[list[float]]:
-
         # Nested functions
         def verb(*args, **kwargs):
             if verbalize:
                 print(*args, **kwargs)
 
-        def if_transform(method):
+        def if_transform(func):
             def wrapper(*args, **kwargs):
                 if transform:
-                    method(*args, **kwargs)
+                    func(*args, **kwargs)
             return wrapper
 
-        def if_introspect(method):
+        def if_introspect(func):
             def wrapper(*args, **kwargs):
                 if introspect:
                     method(*args, **kwargs)
@@ -229,7 +228,7 @@ class Brain(Perceptron):
                 )
             for _ in range(dict_sum(self.RM_O_BS)):
                 self.last_layer.pop_output()
-            # Add due reading memory input
+            # Pop due reading memory input
             self.first_layer.pop_input()
 
         @if_introspect
@@ -239,7 +238,8 @@ class Brain(Perceptron):
                     layer_adress_value,
                     output_adress_value,
                     input_adress_value,
-                    new_walue,
+                    new_value_sign,
+                    new_value,
 
                     # rest values for next splitting by split_by_volumes
                     writing_memory_outputs_values,
@@ -364,7 +364,7 @@ class Brain(Perceptron):
                         (
                             signifying_outputs_values,
                             controlling_signal_outputs_values,
-                            transforming_signal_outputs_values,
+                            transforming_outputs_values,
                             writting_memory_outputs_values,
                             reading_memory_outputs_values,
 
@@ -385,18 +385,18 @@ class Brain(Perceptron):
 
                         # Reading memory transforming
                         (
-                            transform_signal_outputs_values,
-                            layer_adress_outputs_values,
-                            output_adress_outputs_values,
+                            transform_signal_output_value,
+                            layer_adress_output_value,
+                            output_adress_output_value,
 
                         ) = split_by_volumes(
-                            list_for_split=transforming_signal_outputs_values,
+                            list_for_split=transforming_outputs_values,
                             volumes=self.T_O_BS.values(),
                             get_rest=False,
                         )
                         signal = get_element_by_decimal(
                             self.TRANSFORMING_SIGNALS,
-                            transforming_signal_outputs_values,
+                            transform_signal_output_value,
                         )
 
                         reading_memory_inputs_values = _read_weights(
