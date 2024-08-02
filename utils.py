@@ -8,16 +8,6 @@ UNICODE_RANGES = [
 ]
 
 
-def property_alias(alias_name: str):
-    def decorator(prop):
-        @wraps(prop)
-        def wrapper(obj):
-            return prop(obj)
-        setattr(prop.__class__, alias_name, property(wrapper))
-        return prop
-    return decorator
-
-
 def method_alias(alias_name: str):
     def decorator(method):
         @wraps(method)
