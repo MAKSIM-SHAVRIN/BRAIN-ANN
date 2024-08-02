@@ -25,6 +25,7 @@ class Brain(Perceptron):
         layer_adress_ouputs_number=1,
         neuron_adress_ouputs_number=1,
         weight_adress_ouputs_number=1,
+        new_value_sign_outputs_number=1,
         new_walue_ouputs_number=1,
     )
 
