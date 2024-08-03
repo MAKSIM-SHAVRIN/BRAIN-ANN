@@ -306,6 +306,9 @@ class Brain(Perceptron):
                     sequence=list(range(layer.inputs_number + 1)),
                     decimal=input_adress_value,
                 )
+                if new_value_sign < 0.5:
+                    new_value *= -1
+
                 layer.write_weight(
                     input_index_with_bias=input_index,
                     output_index=output_index,
