@@ -120,6 +120,8 @@ class Brain(Perceptron):
         self.inputs_number = inputs_number
         self.outputs_number = outputs_number
 
+        self._transforming_error_flag = 0
+
         super().__init__(_count_initial_perceptron_structure())
         return None  # Added for visual end of the method
 
@@ -144,7 +146,17 @@ class Brain(Perceptron):
         def if_introspect(func):
             def wrapper(*args, **kwargs):
                 if introspect:
-                    method(*args, **kwargs)
+                    func(*args, **kwargs)
+            return wrapper
+
+        def catch_error(func):
+            def wrapper(*args, **kwargs):
+                try:
+                    func(*args, **kwargs)
+                except Exception:
+                    self._transforming_error_flag = 0
+                else:
+                    self._transforming_error_flag = 1
             return wrapper
 
         @if_transform
@@ -160,6 +172,7 @@ class Brain(Perceptron):
             next_layer.append_input()
             verb(f'OUTPUT IS APPENDED TO LAYER {index}')
 
+        @catch_error
         @if_transform
         def _delete_output_from_layer(
             layer_adress: float, output_adress: float,
@@ -206,6 +219,7 @@ class Brain(Perceptron):
                 self.last_layer.insert_output(number + index)
             verb('WRITING MEMORY OUTPUTS BLOCK IS APPENDED')
 
+        @catch_error
         @if_transform
         def _pop_writing_memory_outputs_block():
             if self.writing_memory_outputs_blocks_number == 1:
@@ -225,6 +239,7 @@ class Brain(Perceptron):
             self.first_layer.append_input()
             verb('READING MEMORY OUTPUTS BLOCK IS APPENDED')
 
+        @catch_error
         @if_transform
         def _pop_reading_memory_outputs_block():
             if self.reading_memory_outputs_blocks_number == 1:
