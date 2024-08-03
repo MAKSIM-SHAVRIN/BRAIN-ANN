@@ -418,9 +418,11 @@ class Brain(Perceptron):
                             continue
                     # Repeating
                     while True:
+                        current_time = time()
+
                         # Stop by time limit
                         if time_limit != -1:
-                            if time_limit < time() - start_time:
+                            if time_limit < current_time - start_time:
                                 controlling_signal = 'STOP'
                                 verb('\nSTOPPED BY TIME LIMIT')
                                 break
@@ -435,9 +437,9 @@ class Brain(Perceptron):
                         # Split binary list to valuable binary lists
                         inputs_values_list = [
                             *signiying_inputs_values,
-                            time(),
+                            current_time,
                             time_limit,
-                            transforming_error_signal_inpts_values,
+                            self._transforming_error_flag,
                             reflections_counter,
                             *reading_memory_inputs_values,
                         ]
@@ -495,9 +497,15 @@ class Brain(Perceptron):
                             self.CONTROLLING_SIGNALS,
                             controlling_signal_outputs_values,
                         )
-                        verb(f'Controlling signal: {controlling_signal}')
+                        verb(f'\nCONTROLLING SIGNAL: {controlling_signal}')
 
-                        # Reading memory transforming
+                        # Introspection
+                        reading_memory_inputs_values = _read_weights(
+                            reading_memory_outputs_values,
+                        )
+                        _write_weights(writting_memory_outputs_values)
+
+                        # Transforming
                         (
                             transform_signal_output_value,
                             layer_adress_output_value,
@@ -532,9 +540,6 @@ class Brain(Perceptron):
 
                         elif signal == self.POP_RM_IO_B_SIGNAL:
                             _pop_reading_memory_outputs_block()
-
-                        # Introspection
-                        _write_weights(writting_memory_outputs_values)
 
                         # Add or delete neuron
                         elif signal == 'APPEND_OUTPUT':
