@@ -159,6 +159,8 @@ class Brain(Perceptron):
                     self._transforming_error_flag = 1
             return wrapper
 
+        ################################################################
+
         @if_transform
         def _append_output_to_layer(layer_adress: float):
             # Can not append outputs to last layer...
@@ -532,15 +534,13 @@ class Brain(Perceptron):
                         _write_weights(writting_memory_outputs_values)
 
                         # Add or delete neuron
-                        if signal == 'APPEND_OUTPUT':
-                            _append_output_to_layer(
-                                layer_adress_outputs_values,
-                            )
+                        elif signal == 'APPEND_OUTPUT':
+                            _append_output_to_layer(layer_adress_output_value)
 
                         elif signal == 'DELETE_OUTPUT':
                             _delete_output_from_layer(
-                                layer_adress_outputs_values,
-                                output_adress_outputs_values,
+                                layer_adress_output_value,
+                                output_adress_output_value,
                             )
 
                         # Add or delete writting memory neurons
