@@ -209,22 +209,30 @@ class Brain(Perceptron):
         def if_transform(func):
             def wrapper(*args, **kwargs):
                 if transform:
+                    verb('\nTRANSFORMING IS ENABLED SO RUN FUNCTION')
                     func(*args, **kwargs)
+                else:
+                    verb('\nTRANSFORMING IS DISABLED SO FUNCTION WON`T BE RUN')
             return wrapper
 
         def if_introspect(func):
             def wrapper(*args, **kwargs):
                 if introspect:
-                    func(*args, **kwargs)
+                    verb('\nINTROSPECTION IS ENABLED SO RUN FUNCTION')
+                    return func(*args, **kwargs)
+                else:
+                    verb('\nINTROSPECTION IS DISABLED - FUNCTION WON`T BE RUN')
             return wrapper
 
         def catch_error(func):
             def wrapper(*args, **kwargs):
                 try:
                     func(*args, **kwargs)
-                except Exception:
+                except RuntimeError:
+                    verb('TRANSFORMING ERROR IS CAUGHT')
                     self._transforming_error_flag = 0
                 else:
+                    verb('NO TRANSFORMING ERROR IS CAUGHT')
                     self._transforming_error_flag = 1
             return wrapper
 
@@ -237,10 +245,15 @@ class Brain(Perceptron):
             layers_excluding_last = self.layers[:-1]
             index = get_index_by_decimal(layers_excluding_last, layer_adress)
             layer = self.layers[index]
+
+            verb(f'LAYER {index} CONTAINS {layer.outputs_number}')
+
             layer.append_output()
             # Add due inputs of next layer
             next_layer = self.layers[index + 1]
             next_layer.append_input()
+
+            verb(f'LAYER {index} CONTAINS {layer.outputs_number}')
             verb(f'OUTPUT IS APPENDED TO LAYER {index}')
 
         @catch_error
@@ -254,8 +267,12 @@ class Brain(Perceptron):
             index = get_index_by_decimal(layers_excluding_last, layer_adress)
             layer = self.layers[index]
             outputs_number = layer.outputs_number
+
+            verb(f'LAYER {index} CONTAINS {outputs_number}')
+
             if outputs_number == 1:
-                raise Exception('Can not delete only output of layer')
+                verb('OUTPUT CAN NOT BE DELETED')
+                raise RuntimeError('Can not delete only output of layer')
             output_index = get_index_by_decimal(
                 sequence=list(range(outputs_number)),
                 decimal=output_adress,
@@ -265,6 +282,8 @@ class Brain(Perceptron):
             next_layer = self.layers[index + 1]
             # `1 + neuron_index` cuz remember about bias weight
             next_layer.delete_input(1 + output_index)
+
+            verb(f'LAYER {index} CONTAINS {layer.outputs_number}')
             verb(f'OUTPUT {output_index} IS DELETED FROM LAYER {index}')
 
         def _count_index_after_last_writting_memory_output():
@@ -285,49 +304,67 @@ class Brain(Perceptron):
 
         @if_transform
         def _append_writing_memory_outputs_block():
+            verb(f'WRITING MEMORY OUTPUTS BLOCKS {self.WM_O_BN}')
+
             index = _count_index_after_last_writting_memory_output()
             for number in range(dict_sum(self.WM_O_BS)):
                 self.last_layer.insert_output(number + index)
+
+            verb(f'WRITING MEMORY OUTPUTS BLOCKS {self.WM_O_BN}')
             verb('WRITING MEMORY OUTPUTS BLOCK IS APPENDED')
 
         @catch_error
         @if_transform
         def _pop_writing_memory_outputs_block():
+            verb(f'WRITING MEMORY OUTPUTS BLOCKS {self.WM_O_BN}')
+
             if self.writing_memory_outputs_blocks_number == 1:
-                raise Exception(
+                verb('WRITING MEMORY OUTPUTS BLOCK CAN NOT BE POPPED')
+                raise RuntimeError(
                     'Can not delete only writting memory outputs block',
                 )
             index = _count_index_after_last_writting_memory_output()
             for number in range(dict_sum(self.WM_O_BS)):
                 self.last_layer.delete_output(index - number - 1)
+
+            verb(f'WRITING MEMORY OUTPUTS BLOCKS {self.WM_O_BN}')
             verb('WRITING MEMORY OUTPUTS BLOCK IS POPPED')
 
         @if_transform
         def _append_reading_memory_outputs_block():
+            verb(f'READING MEMORY OUTPUTS BLOCKS {self.RM_O_BN}')
+
             for _ in range(dict_sum(self.RM_O_BS)):
                 self.last_layer.append_output()
             # Add due reading memory input
             self.first_layer.append_input()
+
+            verb(f'READING MEMORY OUTPUTS BLOCKS {self.RM_O_BN}')
             verb('READING MEMORY OUTPUTS BLOCK IS APPENDED')
 
         @catch_error
         @if_transform
         def _pop_reading_memory_outputs_block():
+            verb(f'READING MEMORY OUTPUTS BLOCKS {self.RM_O_BN}')
+
             if self.reading_memory_outputs_blocks_number == 1:
-                raise Exception(
+                verb('READING MEMORY OUTPUTS BLOCK CAN NOT BE POPPED')
+                raise RuntimeError(
                     'Can not delete only reading memory outputs block',
                 )
             for _ in range(dict_sum(self.RM_O_BS)):
                 self.last_layer.pop_output()
             # Pop due reading memory input
             self.first_layer.pop_input()
+
+            verb(f'READING MEMORY OUTPUTS BLOCKS {self.RM_O_BN}')
             verb('READING MEMORY OUTPUTS BLOCK IS POPPED')
 
         @if_introspect
         def _write_weights(writing_memory_outputs_values: list[float]):
             writing_memory_outputs_blocks_number = self.WM_O_BN
             verb(
-                '\nWRITTING MEMORY OUTPUTS VALUES:',
+                'WRITTING MEMORY OUTPUTS VALUES:',
                 writing_memory_outputs_values,
             )
             verb(
@@ -388,13 +425,15 @@ class Brain(Perceptron):
                     f'"{input_index} -> {output_index} WEIGHT"',
                     f'OF THE LAYER {layer_index}',
                 )
+                if input_index == 0:
+                    verb('BIAS VALUE IS CHANGED')
 
         @if_introspect
         def _read_weights(
             reading_memory_outputs_values: list[float],
         ) -> list[float]:
             verb(
-                '\nREADING MEMORY OUTPUTS VALUES:',
+                'READING MEMORY OUTPUTS VALUES:',
                 reading_memory_outputs_values,
             )
             verb(
@@ -466,7 +505,7 @@ class Brain(Perceptron):
         verb(f'\nTRANSFORMATION: {transform}')
         verb(f'INTROSPECTION: {introspect}')
         verb(f'JUST LAST RESOULT: {just_last_resoult}')
-        verb(f'DO NOT SKIP AND REPEAT: {do_not_skip_and_repeat}')
+        verb(f'DO NOT SKIP, REPEAT, STOP: {do_not_skip_repeat_and_stop}')
         verb(f'STEPS LIMIT: {steps_limit}')
 
         # Reflections loop
@@ -512,6 +551,10 @@ class Brain(Perceptron):
 
                         # Get outputs as list of binary signals and
                         # Split binary list to valuable binary lists
+                        verb(
+                            '\nREADING MEMORY INPUTS VALUES: ',
+                            reading_memory_inputs_values,
+                        )
                         inputs_values_list = [
                             *signiying_inputs_values,
                             current_time,
@@ -524,7 +567,7 @@ class Brain(Perceptron):
                             *reading_memory_inputs_values,
                         ]
 
-                        verb(f'\nCURRENT INPUTS: {signiying_inputs_values}')
+                        verb(f'\nCURRENT INPUTS: {signifying_inputs_values}')
                         verb(f'CURRENT_TIME: {current_time}')
                         verb(f'TIME LIMIT: {time_limit}')
                         verb(
@@ -532,10 +575,10 @@ class Brain(Perceptron):
                             self._transforming_error_flag,
                         )
                         verb(f'REFLECTION NUMBER: {reflections_counter}')
-                        verb(
-                            'READING MEMORY INPUTS VALUES: ',
-                            reading_memory_inputs_values,
-                        )
+                        verb(f'REFLECTIONS LIMIT: {reflections_limit}')
+                        verb(f'STEPS NUMBER: {steps_counter}')
+                        verb(f'STEPS LIMIT: {steps_limit}')
+                        verb(f'CONTROLLING SIGNAL: {controlling_signal}')
                         (
                             signifying_outputs_values,
                             controlling_signal_outputs_values,
@@ -620,6 +663,15 @@ class Brain(Perceptron):
 
                         elif signal == self.POP_RM_IO_B_SIGNAL:
                             _pop_reading_memory_outputs_block()
+
+                        # Introspection
+                        reading_memory_inputs_values = _read_weights(
+                            reading_memory_outputs_values,
+                        )
+                        verb(
+                            '\nREADING MEMORY INPUTS VALUES: ',
+                            reading_memory_inputs_values,
+                        )
 
                         # Add or delete neuron
                         elif signal == 'APPEND_OUTPUT':
