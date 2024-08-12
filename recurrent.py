@@ -133,7 +133,7 @@ class Brain(Perceptron):
         self, input_values: Iterable,
         time_limit: int | float = 60, steps_limit: int = -1,
         reflections_limit: int = 7, transform=True, introspect=True,
-        just_last_resoult=False, do_not_skip_repeat_and_stop=False,
+        just_last_resoult=False, due_resoults_length=False,
         verbalize=False,
     ) -> list[NDArray[float]] | list:
         """
@@ -197,6 +197,9 @@ class Brain(Perceptron):
         Returns:
             list[NDArray[float]] | list[]: a resoulting list
         """
+        # Alias
+        DRL = due_resoults_length
+
         # Nested functions
         def verb(*args, **kwargs):
             if verbalize:
@@ -501,7 +504,7 @@ class Brain(Perceptron):
         verb(f'\nTRANSFORMATION: {transform}')
         verb(f'INTROSPECTION: {introspect}')
         verb(f'JUST LAST RESOULT: {just_last_resoult}')
-        verb(f'DO NOT SKIP, REPEAT, STOP: {do_not_skip_repeat_and_stop}')
+        verb(f'DUE RESOULTS LENGTH: {due_resoults_length}')
         verb(f'STEPS LIMIT: {steps_limit}')
 
         # Reflections loop
@@ -524,7 +527,7 @@ class Brain(Perceptron):
                 resoults = list()
                 # Iterations
                 for signifying_inputs_values in signifying_inputs_values_sqnce:
-                    if not do_not_skip_repeat_and_stop:
+                    if not due_resoults_length:
                         if controlling_signal == 'SKIP':
                             controlling_signal = 'NOTHING'
                             verb('\nSKIPPED')
@@ -695,7 +698,7 @@ class Brain(Perceptron):
                         steps_counter += 1
 
                         # Stop repeating
-                        if do_not_skip_repeat_and_stop:
+                        if due_resoults_length:
                             break
                         if controlling_signal != 'REPEAT':
                             break
@@ -703,17 +706,18 @@ class Brain(Perceptron):
                             verb('\nREPEATING')
 
                     # Stop iterations
-                    if not do_not_skip_repeat_and_stop:
-                        if controlling_signal == 'STOP':
+                    if controlling_signal == 'STOP':
+                        if DRL and len(resoults) != self.inputs_number:
+                            pass
+                        else:
                             break
                     elif controlling_signal == 'STOP_REFLECTIONS':
                         break
                     verb('\nNEXT ITERATION')
 
                 # Stop reflection
-                if not do_not_skip_repeat_and_stop:
-                    if controlling_signal == 'STOP':
-                        break
+                if controlling_signal == 'STOP':
+                    break
                 elif controlling_signal == 'STOP_REFLECTIONS':
                     break
                 # Resoults are empty or not enough for the next reflect
