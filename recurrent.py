@@ -510,7 +510,8 @@ class Brain(Perceptron):
 
         # Reflections loop
         while True:
-            signifying_inputs_values_sqnce = input_values_iterator
+            resoults = list()
+            signifying_inputs_values_sqnce = input_values
             verb(f'\nINPUTS VALUES: {signifying_inputs_values_sqnce}')
             # Reflections
             reflections_counter = 0
@@ -719,7 +720,7 @@ class Brain(Perceptron):
                     break
                 elif controlling_signal == 'STOP_REFLECTIONS':
                     break
-                # Resoults are empty or not enough for the next reflection
+                # Resoults are empty or not enough for the next reflect
                 elif self.inputs_number != self.outputs_number:
                     break
                 elif resoults == list():
