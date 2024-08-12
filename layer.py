@@ -55,12 +55,12 @@ class Layer:
 
     def delete_output(self, index: int):
         if self.outputs_number == 1:
-            raise Exception('Can not delete last output')
+            raise RuntimeError('Can not delete last output')
         self.matrix = delete(arr=self.matrix, obj=index, axis=0)
 
     def pop_output(self):
         if self.outputs_number == 1:
-            raise Exception('Can not delete last output')
+            raise RuntimeError('Can not delete last output')
         self.delete_output(self.outputs_number - 1)
 
     def append_input(self):
@@ -72,15 +72,15 @@ class Layer:
         )
 
     def delete_input(self, index: int):
-        # `index+1` for we never could delete the bias
         if self.inputs_number == 1:
-            raise Exception('Can not delete last non-bias input')
+            raise RuntimeError('Can not delete last non-bias input')
+        # `index+1` for we never could delete the bias
         self.matrix = delete(arr=self.matrix, obj=index+1, axis=1)
 
     def pop_input(self):
         if self.inputs_number == 1:
-            raise Exception('Can not delete last non-bias input')
-        self.delete_input(self.matrix.shape[1] - 1)
+            raise RuntimeError('Can not delete last non-bias input')
+        self.delete_input(self.inputs_number - 1)
 
     def write_weight(
         self, input_index_with_bias: int, output_index: int, new_walue: float,
