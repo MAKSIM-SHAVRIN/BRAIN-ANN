@@ -527,8 +527,8 @@ class Brain(Perceptron):
 
                 resoults = list()
                 # Iterations
-                for signiying_inputs_values in signifying_inputs_values_sqnce:
-                    if not do_not_skip_and_repeat:
+                for signifying_inputs_values in signifying_inputs_values_sqnce:
+                    if not do_not_skip_repeat_and_stop:
                         if controlling_signal == 'SKIP':
                             controlling_signal = 'NOTHING'
                             verb('\nSKIPPED')
@@ -701,7 +701,7 @@ class Brain(Perceptron):
                         steps_counter += 1
 
                         # Stop repeating
-                        if do_not_skip_and_repeat:
+                        if do_not_skip_repeat_and_stop:
                             break
                         if controlling_signal != 'REPEAT':
                             break
@@ -709,15 +709,17 @@ class Brain(Perceptron):
                             verb('\nREPEATING')
 
                     # Stop iterations
-                    if controlling_signal == 'STOP':
-                        break
+                    if not do_not_skip_repeat_and_stop:
+                        if controlling_signal == 'STOP':
+                            break
                     elif controlling_signal == 'STOP_REFLECTIONS':
                         break
                     verb('\nNEXT ITERATION')
 
                 # Stop reflection
-                if controlling_signal == 'STOP':
-                    break
+                if not do_not_skip_repeat_and_stop:
+                    if controlling_signal == 'STOP':
+                        break
                 elif controlling_signal == 'STOP_REFLECTIONS':
                     break
                 # Resoults are empty or not enough for the next reflect
