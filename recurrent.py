@@ -139,7 +139,68 @@ class Brain(Perceptron):
         reflections_limit: int = 7, transform=True, introspect=True,
         just_last_resoult=False, do_not_skip_repeat_and_stop=False,
         verbalize=False,
-    ) -> list[list[float]]:
+    ) -> list[NDArray[float]] | list:
+        """
+        The method performs calculations
+        using the recurrent generative neural network
+
+        Args:
+            input_values (Iterable):
+            Input iterable by axis=1 must provide due number of cells
+            to number of signifuing inputs of the net to provide reflections.
+
+            time_limit (int | float):
+            Ensures that the calculation stops
+            after the specified time has passed,
+            without waiting a stopping signal,
+            -1 for unlimited time.
+            Defaults to 60.
+
+            steps_limit (int | NoneType):
+            Ensures that the calculation stops
+            after the specified number of steps has passed -
+            single forvard propogations within the perceptron,
+            -1 for unlimited steps.
+            Defaults to -1.
+
+            reflections_limit (int):
+            Limitation on the number of reflection levels,
+            i.e. recursion iterations,
+            Warning - it doesen't stop after reaching of limit,
+            turns back to reflection number 0 instead,
+            -1 for unlimited reflections.
+            Defaults to 7.
+
+            transform (bool):
+            Allows the network to change its own structure,
+            thus changing its efficiency and its memory mechanisms.
+            Defaults to True.
+
+            introspect (bool):
+            Allows the network to change its own weights,
+            thus providing memorization and zero-shot learning.
+            Defaults to True.
+
+            just_last_resoult (bool):
+            Provides a result of only the last step of the calculation
+            and not store the entire chain of results in memory.
+            Defaults to False.
+
+            do_not_skip_repeat_and_stop (bool):
+            Provides a result equal in length to the input data.
+            Defaults to False.
+
+            verbalize (bool):
+            Output data about the calculation process to the console.
+            Defaults to False.
+
+        Raises:
+            RuntimeError: if it is impossible delede an input
+            or a writing/reading memory outputs block
+
+        Returns:
+            list[NDArray[float]] | list[]: a resoulting list
+        """
         # Nested functions
         def verb(*args, **kwargs):
             if verbalize:
