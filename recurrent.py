@@ -1,8 +1,10 @@
 from json import dump, load
 from pathlib import Path
 from time import time
+from typing import Iterable
 
 from numpy import array
+from numpy.typing import NDArray
 
 from perceptron import Perceptron
 from utils import (
