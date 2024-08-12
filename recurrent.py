@@ -7,13 +7,9 @@ from numpy import array
 from numpy.typing import NDArray
 
 from perceptron import Perceptron
-from utils import (
-    check_dir_path_slash_ending,
-    dict_sum,
-    get_element_by_decimal,
-    get_index_by_decimal,
-    split_by_volumes,
-)
+from utils import (check_dir_path_slash_ending, dict_sum,
+                   get_element_by_decimal, get_index_by_decimal,
+                   split_by_volumes)
 
 
 class Brain(Perceptron):
@@ -557,7 +553,7 @@ class Brain(Perceptron):
                             reading_memory_inputs_values,
                         )
                         inputs_values_list = [
-                            *signiying_inputs_values,
+                            *signifying_inputs_values,
                             current_time,
                             time_limit,
                             self._transforming_error_flag,
@@ -592,6 +588,7 @@ class Brain(Perceptron):
                                 array(inputs_values_list),
                             ),
                             volumes=self.outputs_structure.values(),
+                            extract_single_values=False,
                             get_rest=False,
                         )
 
@@ -619,14 +616,11 @@ class Brain(Perceptron):
                         # Get controlling signal
                         controlling_signal = get_element_by_decimal(
                             self.CONTROLLING_SIGNALS,
-                            controlling_signal_outputs_values,
+                            controlling_signal_outputs_values[-1],
                         )
                         verb(f'\nCONTROLLING SIGNAL: {controlling_signal}')
 
                         # Introspection
-                        reading_memory_inputs_values = _read_weights(
-                            reading_memory_outputs_values,
-                        )
                         _write_weights(writting_memory_outputs_values)
 
                         # Transforming
@@ -675,7 +669,7 @@ class Brain(Perceptron):
                         )
 
                         # Add or delete neuron
-                        elif signal == 'APPEND_OUTPUT':
+                        if signal == 'APPEND_OUTPUT':
                             _append_output_to_layer(layer_adress_output_value)
 
                         elif signal == 'DELETE_OUTPUT':
@@ -847,6 +841,8 @@ if __name__ == '__main__':
     print(
         BigBrain()(
             [[789], [7], [8], [9], [1], [0], [5], [6]],
-            verbalize=True
+            verbalize=True,
+            do_not_skip_repeat_and_stop=True,
+            time_limit=-1,
         ),
     )
