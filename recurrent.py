@@ -49,6 +49,9 @@ class Brain(Perceptron):
     T_I_N = TIME_INPUTS_NUMBER = 1
     TL_I_N = TIME_LIMIT_INPUTS_NUMBER = 1
     R_I_N = REFLECTIONS_INPUTS_NUMBER = 1
+    RL_I_N = REFLECTIONS_LIMIT_INPUTS_NUMBER = 1
+    S_I_N = STEPS_INPUTS_NUMBER = 1
+    SL_I_N = STEPS_LIMIT_INPUTS_NUMBER = 1
 
     # Signals
     CONTROLLING_SIGNALS = [
@@ -87,6 +90,9 @@ class Brain(Perceptron):
                     time_limit_inputs_number=self.TL_I_N,
                     transforming_error_signal_inpts_number=self.TES_I_N,
                     reflections_counter_inputs_number=self.R_I_N,
+                    reflections_limit_inputs_number=self.RL_I_N,
+                    steps_counter_inputs_number=self.S_I_N,
+                    steps_limit_inputs_number=self.SL_I_N,
                     reading_memory_inputs_number=self.I_RM_IO_BN,
                 ),
             )
@@ -128,10 +134,10 @@ class Brain(Perceptron):
         return None  # Added for visual end of the method
 
     def __call__(
-        self, input_values_iterator,
-        time_limit: float = -1, steps_limit: int = None,
-        transform=True, introspect=True,
-        just_last_resoult=False, do_not_skip_and_repeat=False,
+        self, input_values: Iterable,
+        time_limit: int | float = 60, steps_limit: int = -1,
+        reflections_limit: int = 7, transform=True, introspect=True,
+        just_last_resoult=False, do_not_skip_repeat_and_stop=False,
         verbalize=False,
     ) -> list[list[float]]:
         # Nested functions
@@ -388,8 +394,7 @@ class Brain(Perceptron):
             start_time = time()
 
         # Start of steps counting
-        if steps_limit:
-            steps_counter = 0
+        steps_counter = 0
 
         # initial controlling signal is always do nothing
         controlling_signal = 'NOTHING'
@@ -410,6 +415,15 @@ class Brain(Perceptron):
             # Reflections
             reflections_counter = 0
             while True:
+                if reflections_limit != -1:
+                    if reflections_counter >= reflections_limit:
+                        verb(
+                            f'\nREFLECTIONS LIMIT {reflections_limit}',
+                            'IS REACHED: STOP REFLECTIONS',
+                        )
+                        controlling_signal = 'STOP_REFLECTIONS'
+                        break
+
                 resoults = list()
                 # Iterations
                 for signiying_inputs_values in signifying_inputs_values_sqnce:
@@ -430,7 +444,7 @@ class Brain(Perceptron):
                                 break
 
                         # Stop by steps limit
-                        if steps_limit and steps_limit < steps_counter:
+                        if steps_limit != -1 and steps_limit < steps_counter:
                             controlling_signal = 'STOP'
                             verb('\nSTOPPED BY STEP LIMIT')
                             break
@@ -443,6 +457,9 @@ class Brain(Perceptron):
                             time_limit,
                             self._transforming_error_flag,
                             reflections_counter,
+                            reflections_limit,
+                            steps_counter,
+                            steps_limit,
                             *reading_memory_inputs_values,
                         ]
 
@@ -567,8 +584,7 @@ class Brain(Perceptron):
                             resoults.append(signifying_outputs_values)
 
                         # Increase steps counter
-                        if steps_limit:
-                            steps_counter += 1
+                        steps_counter += 1
 
                         # Stop repeating
                         if do_not_skip_and_repeat:
@@ -625,7 +641,10 @@ class Brain(Perceptron):
             - self.TIME_INPUTS_NUMBER\
             - self.TIME_LIMIT_INPUTS_NUMBER\
             - self.TRANSFORMING_ERROR_SIGNAL_INPUTS_NUMBER\
-            - self.REFLECTIONS_INPUTS_NUMBER
+            - self.REFLECTIONS_INPUTS_NUMBER\
+            - self.REFLECTIONS_LIMIT_INPUTS_NUMBER\
+            - self.STEPS_INPUTS_NUMBER\
+            - self.STEPS_LIMIT_INPUTS_NUMBER
     # aliasing reading_memory_outputs_blocks_number
     RM_O_BN = reading_memory_outputs_blocks_number
 
