@@ -256,8 +256,8 @@ class Brain(Perceptron):
             verb(f'LAYER {index} CONTAINS {layer.outputs_number}')
             verb(f'OUTPUT IS APPENDED TO LAYER {index}')
 
-        @catch_error
         @if_transform
+        @catch_error
         def _delete_output_from_layer(
             layer_adress: float, output_adress: float,
         ):
@@ -313,8 +313,8 @@ class Brain(Perceptron):
             verb(f'WRITING MEMORY OUTPUTS BLOCKS {self.WM_O_BN}')
             verb('WRITING MEMORY OUTPUTS BLOCK IS APPENDED')
 
-        @catch_error
         @if_transform
+        @catch_error
         def _pop_writing_memory_outputs_block():
             verb(f'WRITING MEMORY OUTPUTS BLOCKS {self.WM_O_BN}')
 
@@ -342,8 +342,8 @@ class Brain(Perceptron):
             verb(f'READING MEMORY OUTPUTS BLOCKS {self.RM_O_BN}')
             verb('READING MEMORY OUTPUTS BLOCK IS APPENDED')
 
-        @catch_error
         @if_transform
+        @catch_error
         def _pop_reading_memory_outputs_block():
             verb(f'READING MEMORY OUTPUTS BLOCKS {self.RM_O_BN}')
 
