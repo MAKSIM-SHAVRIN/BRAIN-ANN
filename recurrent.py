@@ -204,6 +204,7 @@ class Brain(Perceptron):
         def verb(*args, **kwargs):
             if verbalize:
                 print(*args, **kwargs)
+            return None
 
         def if_transform(func):
             def wrapper(*args, **kwargs):
@@ -251,9 +252,7 @@ class Brain(Perceptron):
             # Add due inputs of next layer
             next_layer = self.layers[index + 1]
             next_layer.append_input()
-
-            verb(f'LAYER {index} CONTAINS {layer.outputs_number}')
-            verb(f'OUTPUT IS APPENDED TO LAYER {index}')
+            return None
 
         @if_transform
         @catch_error
@@ -281,9 +280,7 @@ class Brain(Perceptron):
             next_layer = self.layers[index + 1]
             # `1 + neuron_index` cuz remember about bias weight
             next_layer.delete_input(1 + output_index)
-
-            verb(f'LAYER {index} CONTAINS {layer.outputs_number}')
-            verb(f'OUTPUT {output_index} IS DELETED FROM LAYER {index}')
+            return None
 
         def _count_index_after_last_writting_memory_output():
             w_memory_outputs_number = dict_sum(self.WM_O_BS) * self.WM_O_BN
@@ -308,9 +305,7 @@ class Brain(Perceptron):
             index = _count_index_after_last_writting_memory_output()
             for number in range(dict_sum(self.WM_O_BS)):
                 self.last_layer.insert_output(number + index)
-
-            verb(f'WRITING MEMORY OUTPUTS BLOCKS {self.WM_O_BN}')
-            verb('WRITING MEMORY OUTPUTS BLOCK IS APPENDED')
+            return None
 
         @if_transform
         @catch_error
@@ -325,9 +320,7 @@ class Brain(Perceptron):
             index = _count_index_after_last_writting_memory_output()
             for number in range(dict_sum(self.WM_O_BS)):
                 self.last_layer.delete_output(index - number - 1)
-
-            verb(f'WRITING MEMORY OUTPUTS BLOCKS {self.WM_O_BN}')
-            verb('WRITING MEMORY OUTPUTS BLOCK IS POPPED')
+            return None
 
         @if_transform
         def _append_reading_memory_outputs_block():
@@ -337,9 +330,7 @@ class Brain(Perceptron):
                 self.last_layer.append_output()
             # Add due reading memory input
             self.first_layer.append_input()
-
-            verb(f'READING MEMORY OUTPUTS BLOCKS {self.RM_O_BN}')
-            verb('READING MEMORY OUTPUTS BLOCK IS APPENDED')
+            return None
 
         @if_transform
         @catch_error
@@ -355,9 +346,7 @@ class Brain(Perceptron):
                 self.last_layer.pop_output()
             # Pop due reading memory input
             self.first_layer.pop_input()
-
-            verb(f'READING MEMORY OUTPUTS BLOCKS {self.RM_O_BN}')
-            verb('READING MEMORY OUTPUTS BLOCK IS POPPED')
+            return None
 
         @if_introspect
         def _write_weights(writing_memory_outputs_values: list[float]):
@@ -419,13 +408,7 @@ class Brain(Perceptron):
                     output_index=output_index,
                     new_walue=new_value,
                 )
-                verb(
-                    f'VALUE "{new_value}" IS WRITTEN TO THE',
-                    f'"{input_index} -> {output_index} WEIGHT"',
-                    f'OF THE LAYER {layer_index}',
-                )
-                if input_index == 0:
-                    verb('BIAS VALUE IS CHANGED')
+            return None
 
         @if_introspect
         def _read_weights(
