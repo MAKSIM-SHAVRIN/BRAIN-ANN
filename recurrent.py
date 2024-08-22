@@ -3,7 +3,7 @@ from pathlib import Path
 from time import time
 from typing import Iterable, Callable
 
-from numpy import array
+from numpy import array, append
 from numpy.typing import NDArray
 
 from perceptron import Perceptron
@@ -17,9 +17,27 @@ class Memory:
     I_BN = INITIAL_BLOCKS_NUMBER = 5
     BS = BLOCK_STRUCTURE = ...
     BN = blocks_number = ...
+    append_block = ...
+    pop_block = ...
+
+    def align_walues_with_outputs(
+        self, values: NDArray[float],
+    ) -> NDArray[float]:
+        difference = self.outputs_number - len(values)
+        if difference > 0:
+            values = append(arr=values, values=difference*[0,], axis=0)
+        elif difference < 0:
+            values = values[self.outputs_number]
+        return values
 
     def __init__(self, brain):
         self.brain = brain
+
+        # decorating of methods by decorators from Brain class
+        self.append_block = self.brain.if_transform(self.append_block)
+
+        self.pop_block = self.brain\
+            .if_transform(self.brain.catch_error(self.pop_block))
 
     @property
     def initial_outputs_number(self) -> int:
@@ -44,9 +62,15 @@ class WritingMemory(Memory):
         new_walue_ouputs_number=1,
     )
 
+    def __init__(self, brain):
+        super().__init__(brain)
+
+        # decorating of methods by decorators from Brain class
+        self.write_weights = self.brain.if_introspect(self.write_weights)
+
     @property
     def blocks_number(self) -> int:
-        writing_memory_outputs_number = self.last_layer.outputs_number\
+        writing_memory_outputs_number = self.brain.last_layer.outputs_number\
             - self.brain.outputs_number\
             - self.brain.CONTROLLING_SIGNAL_OUTPUTS_NUMBER\
             - dict_sum(self.brain.TRANSFORMING_OUTPUTS_BLOCK_STRUCTURE)\
@@ -72,15 +96,12 @@ class WritingMemory(Memory):
         )
         return index
 
-    @if_transform
     def append_block(self):
         index = self.index_after_last_output
         for number in range(dict_sum(self.BLOCK_STRUCTURE)):
             self.brain.last_layer.insert_output(number + index)
         return None
 
-    @if_transform
-    @catch_error
     def pop_block(self):
         if self.blocks_number == 1:
             raise RuntimeError(
@@ -91,8 +112,9 @@ class WritingMemory(Memory):
             self.brain.last_layer.delete_output(index - number - 1)
         return None
 
-    @if_introspect
     def write_weights(self, writing_memory_outputs_values: list[float]):
+        writing_memory_outputs_values = self\
+            .align_walues_with_outputs(writing_memory_outputs_values)
         for number in range(self.blocks_number):
             (
                 layer_adress_value,
@@ -144,6 +166,12 @@ class ReadingMemory(Memory):
         input_adress_ouputs_number=1,
     )
 
+    def __init__(self, brain):
+        super().__init__(brain)
+
+        # decorating of methods by decorators from Brain class
+        self.read_weights = self.brain.if_introspect(self.read_weights)
+
     @property
     def blocks_number(self) -> int:
         return self.brain.first_layer.inputs_number\
@@ -158,7 +186,6 @@ class ReadingMemory(Memory):
     # aliasing blocks_number
     BN = blocks_number
 
-    @if_transform
     def append_block(self):
         for _ in range(dict_sum(self.BLOCK_STRUCTURE)):
             self.brain.last_layer.append_output()
@@ -166,8 +193,6 @@ class ReadingMemory(Memory):
         self.brain.first_layer.append_input()
         return None
 
-    @if_transform
-    @catch_error
     def pop_block(self):
         if self.blocks_number == 1:
             raise RuntimeError(
@@ -179,10 +204,11 @@ class ReadingMemory(Memory):
         self.brain.first_layer.pop_input()
         return None
 
-    @if_introspect
     def read_weights(
         self, reading_memory_outputs_values: list[float],
     ) -> list[float]:
+        reading_memory_outputs_values = self\
+            .align_walues_with_outputs(reading_memory_outputs_values)
         rmi_values = list()
         for number in range(self.blocks_number):
             (
@@ -265,41 +291,34 @@ class Brain(Perceptron):
     APPEND_RM_IO_B_SIGNAL = TRANSFORMING_SIGNALS[5]
     POP_RM_IO_B_SIGNAL = TRANSFORMING_SIGNALS[6]
 
-    @classmethod
-    def verb(cls, *args, **kwargs):
-        if cls._verbalize:
+    def verb(self, *args, **kwargs):
+        if self._verbalize:
             print(*args, **kwargs)
         return None
 
-    @staticmethod
-    def if_transform(method: Callable) -> Callable:
+    def if_transform(self, method: Callable) -> Callable:
         def wrapper(*args, **kwargs):
             # First argument is usualy class` instance
-            self = args[0]
-            if self._transform:
+            if self.brain._transform:
                 method(*args, **kwargs)
         return wrapper
 
-    @staticmethod
-    def if_introspect(method: Callable) -> Callable:
+    def if_introspect(self, method: Callable) -> Callable:
         def wrapper(*args, **kwargs):
             # First argument is usualy class` instance
-            self = args[0]
-            if self._introspect:
-                return func(*args, **kwargs)
+            if self.brain._introspect:
+                return method(*args, **kwargs)
         return wrapper
 
-    @staticmethod
-    def catch_error(method: Callable) -> Callable:
+    def catch_error(self, method: Callable) -> Callable:
         def wrapper(*args, **kwargs):
             # First argument is usualy class` instance
-            self = args[0]
             try:
-                func(*args, **kwargs)
+                method(*args, **kwargs)
             except RuntimeError:
-                self._transforming_error_flag = 0
+                self.brain._transforming_error_flag = 0
             else:
-                self._transforming_error_flag = 1
+                self.brain._transforming_error_flag = 1
         return wrapper
 
     @property
@@ -355,6 +374,8 @@ class Brain(Perceptron):
 
     # Methods
     def __init__(self, inputs_number: int = 1, outputs_number: int = 1):
+        self.brain = self
+
         self.inputs_number = inputs_number
         self.outputs_number = outputs_number
 
@@ -363,10 +384,16 @@ class Brain(Perceptron):
 
         self._transforming_error_flag = 0
 
+        # decorating of methods by decorators from Brain class
+        self.append_output_to_layer = self\
+            .if_transform(self.append_output_to_layer)
+
+        self.delete_output_from_layer = self\
+            .catch_error(self.if_transform(self.delete_output_from_layer))
+
         super().__init__(self.initial_perceptron_structure)
         return None  # Added for visual end of the method
 
-    @if_transform
     def append_output_to_layer(self, layer_adress: float):
         # Can not append outputs to last layer...
         # ...cuz it has its own special structure
@@ -380,8 +407,6 @@ class Brain(Perceptron):
         next_layer.append_input()
         return None
 
-    @if_transform
-    @catch_error
     def delete_output_from_layer(
         self, layer_adress: float, output_adress: float,
     ):
@@ -476,6 +501,11 @@ class Brain(Perceptron):
         Returns:
             list[NDArray[float]] | list[]: a resoulting list
         """
+        # Atributes for working of decorators
+        self._transform = transform
+        self._introspect = introspect
+        self.__class__._verbalize = verbalize
+
         # Alias
         DRL = due_resoults_length
 
@@ -502,7 +532,7 @@ class Brain(Perceptron):
             while True:
                 if reflections_limit != -1:
                     if reflections_counter >= reflections_limit:
-                        verb(
+                        self.verb(
                             f'\nREFLECTIONS LIMIT {reflections_limit}',
                             'IS REACHED: STOP REFLECTIONS',
                         )
@@ -515,7 +545,7 @@ class Brain(Perceptron):
                     if not due_resoults_length:
                         if controlling_signal == 'SKIP':
                             controlling_signal = 'NOTHING'
-                            verb('\nSKIPPED')
+                            self.verb('\nSKIPPED')
                             continue
                     # Repeating
                     while True:
@@ -525,13 +555,13 @@ class Brain(Perceptron):
                         if time_limit != -1:
                             if time_limit < current_time - start_time:
                                 controlling_signal = 'STOP'
-                                verb('\nSTOPPED BY TIME LIMIT')
+                                self.verb('\nMUST BE STOPPED BY TIME LIMIT')
                                 break
 
                         # Stop by steps limit
                         if steps_limit != -1 and steps_limit < steps_counter:
                             controlling_signal = 'STOP'
-                            verb('\nSTOPPED BY STEP LIMIT')
+                            self.verb('\nMUST BE STOPPED BY STEP LIMIT')
                             break
 
                         # Get outputs as list of float signals and
@@ -548,18 +578,20 @@ class Brain(Perceptron):
                             *rmi_values,
                         ]
 
-                        verb(f'\nCURRENT INPUTS: {signifying_inputs_values}')
-                        verb(f'TIME LIMIT: {time_limit}')
-                        verb(
+                        self.verb(
+                            f'\nCURRENT INPUTS: {signifying_inputs_values}',
+                        )
+                        self.verb(f'TIME LIMIT: {time_limit}')
+                        self.verb(
                             'TRASFORMATION ERROR ON PREVIOUS STEP: ',
                             self._transforming_error_flag,
                         )
-                        verb(f'REFLECTION NUMBER: {reflections_counter}')
-                        verb(f'REFLECTIONS LIMIT: {reflections_limit}')
-                        verb(f'STEPS NUMBER: {steps_counter}')
-                        verb(f'STEPS LIMIT: {steps_limit}')
-                        verb(f'CONTROLLING SIGNAL: {controlling_signal}')
-                        verb(f'RESOULTS: {resoults}')
+                        self.verb(f'REFLECTION NUMBER: {reflections_counter}')
+                        self.verb(f'REFLECTIONS LIMIT: {reflections_limit}')
+                        self.verb(f'STEPS NUMBER: {steps_counter}')
+                        self.verb(f'STEPS LIMIT: {steps_limit}')
+                        self.verb(f'CONTROLLING SIGNAL: {controlling_signal}')
+                        self.verb(f'RESOULTS: {resoults}')
                         (
                             signifying_outputs_values,
                             controlling_signal_outputs_values,
@@ -581,7 +613,7 @@ class Brain(Perceptron):
                             self.CONTROLLING_SIGNALS,
                             controlling_signal_outputs_values[-1],
                         )
-                        verb(f'\nCONTROLLING SIGNAL: {controlling_signal}')
+                        self.verb(f'\nCONTROLLING SIGNAL: {controlling_signal}')
 
                         # Introspection
                         self.writing_memory.write_weights(
@@ -606,7 +638,7 @@ class Brain(Perceptron):
                             self.TRANSFORMING_SIGNALS,
                             transform_signal_output_value,
                         )
-                        verb(f'\nTRANSFORMING SIGNAL: {signal}')
+                        self.verb(f'\nTRANSFORMING SIGNAL: {signal}')
 
                         # Add or delete reading memory neurons
                         if signal == self.APPEND_RM_IO_B_SIGNAL:
@@ -647,12 +679,12 @@ class Brain(Perceptron):
                         if controlling_signal != 'REPEAT':
                             break
                         else:
-                            verb('\nREPEATING')
+                            self.verb('\nREPEATING')
 
                     # Stop iterations
                     if controlling_signal == 'STOP':
                         if DRL and len(resoults) != len(input_values):
-                            verb(
+                            self.verb(
                                 '\nCAN`T STOP',
                                 '\nCUZ THE LENGTH OF RESOULTS',
                                 'IS NOT EQUAL TO LENGTH OF INPUT VALUES',
@@ -662,7 +694,7 @@ class Brain(Perceptron):
                             break
                     elif controlling_signal == 'STOP_REFLECTIONS':
                         if DRL and len(resoults) != len(input_values):
-                            verb(
+                            self.verb(
                                 '\nCAN`T BREAK REFLECTIONS',
                                 '\nCUZ THE LENGTH OF RESOULTS',
                                 'IS NOT EQUAL TO LENGTH OF INPUT VALUES',
@@ -670,12 +702,12 @@ class Brain(Perceptron):
                             pass
                         else:
                             break
-                    verb('\nNEXT ITERATION')
+                    self.verb('\nNEXT ITERATION')
 
                 # Stop reflection
                 if controlling_signal == 'STOP':
                     if DRL and len(resoults) != len(input_values):
-                        verb(
+                        self.verb(
                             '\nCAN`T STOP',
                             '\nCUZ THE LENGTH OF RESOULTS',
                             'IS NOT EQUAL TO LENGTH OF INPUT VALUES',
@@ -686,7 +718,7 @@ class Brain(Perceptron):
 
                 elif controlling_signal == 'STOP_REFLECTIONS':
                     if DRL and len(resoults) != len(input_values):
-                        verb(
+                        self.verb(
                             '\nCAN`T BREAK REFLECTIONS',
                             '\nCUZ THE LENGTH OF RESOULTS',
                             'IS NOT EQUAL TO LENGTH OF INPUT VALUES',
@@ -698,7 +730,7 @@ class Brain(Perceptron):
                 elif self.inputs_number != self.outputs_number:
                     break
                 elif resoults == list():
-                    verb('RESOULTS ARE EMPTY')
+                    self.verb('RESOULTS ARE EMPTY')
                     break
                 elif just_last_resoult:
                     break
@@ -706,13 +738,13 @@ class Brain(Perceptron):
                 # Prepare request for new reflection from results
                 signifying_inputs_values_sqnce = resoults
                 reflections_counter += 1
-                verb(f'\nRESOLTS LENGTH: {len(resoults)}')
-                verb('\nNEXT REFLECTION')
+                self.verb(f'\nRESOLTS LENGTH: {len(resoults)}')
+                self.verb('\nNEXT REFLECTION')
 
             # Stop reflections loop
             if controlling_signal != 'STOP_REFLECTIONS':
                 break
-            verb('\nREFLECTIONS ARE RESET')
+            self.verb('\nREFLECTIONS ARE RESET')
         return resoults
 
     @property
