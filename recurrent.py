@@ -83,9 +83,9 @@ class Brain(Perceptron):
             try:
                 method(*args, **kwargs)
             except RuntimeError:
-                self.brain._transforming_error_flag = 0
-            else:
                 self.brain._transforming_error_flag = 1
+            else:
+                self.brain._transforming_error_flag = 0
         return wrapper
 
     @property
