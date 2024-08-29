@@ -191,9 +191,86 @@ class Brain(Perceptron):
         layer.delete_output(output_index)
         # Delete due weights of next layer
         next_layer = self.layers[index + 1]
-        # `1 + neuron_index` cuz remember about bias weight
-        next_layer.delete_input(1 + output_index)
+        next_layer.delete_input(output_index)
         return None
+
+    def verbalize_input_values(
+        self, signifying_inputs_values, passed_time, time_limit,
+        reflections_counter, reflections_limit, steps_counter, steps_limit,
+    ):
+        self.verb(f'\nCURRENT INPUTS: {signifying_inputs_values}')
+
+        self.verb(f'PASSED TIME: {passed_time}')
+        self.verb(f'TIME LIMIT: {time_limit}')
+
+        self.verb(
+            'TRASFORMATION ERROR ON PREVIOUS STEP: ',
+            self._transforming_error_flag,
+        )
+        self.verb(f'REFLECTION NUMBER: {reflections_counter}')
+        self.verb(f'REFLECTIONS LIMIT: {reflections_limit}')
+
+        self.verb(f'STEPS NUMBER: {steps_counter}')
+        self.verb(f'STEPS LIMIT: {steps_limit}')
+
+        return None
+
+    def transform(
+        self, transforming_outputs_values: list[float] | NDArray[float],
+    ):
+        (
+            transform_signal_output_value,
+            layer_adress_output_value,
+            output_adress_output_value,
+
+        ) = split_by_volumes(
+            list_for_split=transforming_outputs_values,
+            volumes=self.T_O_BS.values(),
+            get_rest=False,
+        )
+        transforming_signal = get_element_by_decimal(
+            self.TRANSFORMING_SIGNALS,
+            transform_signal_output_value,
+        )
+        self.verb(f'TRANSFORMING SIGNAL: {transforming_signal}')
+
+        # Add or delete reading memory neurons
+        if transforming_signal == 'APPEND_READING_MEMORY_BLOCK':
+            self.reading_memory.append_block()
+
+        elif transforming_signal == 'POP_READING_MEMORY_BLOCK':
+            self.reading_memory.pop_block()
+
+        # Add or delete neuron
+        if transforming_signal == 'APPEND_OUTPUT':
+            self.append_output_to_layer(layer_adress_output_value)
+
+        elif transforming_signal == 'DELETE_OUTPUT':
+            self.delete_output_from_layer(
+                layer_adress_output_value,
+                output_adress_output_value,
+            )
+
+        # Add or delete writing memory neurons
+        elif transforming_signal == 'APPEND_WRITING_MEMORY_BLOCK':
+            self.writing_memory.append_block()
+
+        elif transforming_signal == 'POP_WRITING_MEMORY_BLOCK':
+            self.writing_memory.pop_block()
+
+        elif transforming_signal == 'NOTHING':
+            self._transforming_error_flag = 0
+
+        return None
+
+    def turn_Nones_negative_ones(self, iterable: list) -> NDArray[float]:
+        resoult = list()
+        for element in iterable:
+            if element is None:
+                resoult.append(-1)
+                continue
+            resoult.append(element)
+        return array(resoult)
 
     def __call__(
         self, input_values: Iterable,
