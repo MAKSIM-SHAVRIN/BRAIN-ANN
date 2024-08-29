@@ -149,8 +149,6 @@ class Brain(Perceptron):
         self.reading_memory = ReadingMemory(brain=self)
         self.writing_memory = WritingMemory(brain=self)
 
-        self._transforming_error_flag = 0
-
         # decorating of methods by decorators from Brain class
         self.append_output_to_layer = self\
             .if_transform(self.append_output_to_layer)
