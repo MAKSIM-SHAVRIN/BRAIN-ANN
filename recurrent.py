@@ -57,8 +57,6 @@ class Brain(Perceptron):
         'APPEND_READING_MEMORY_BLOCK',
         'POP_READING_MEMORY_BLOCK',
     ]
-    APPEND_RM_IO_B_SIGNAL = TRANSFORMING_SIGNALS[5]
-    POP_RM_IO_B_SIGNAL = TRANSFORMING_SIGNALS[6]
 
     def verb(self, *args, **kwargs):
         if self._verbalize:
