@@ -1,9 +1,8 @@
-from json import dump, load
-from pathlib import Path
 from time import time
-from typing import Iterable, Callable
+from typing import Callable, Iterable
+from types import NoneType
 
-from numpy import array, append
+from numpy import array, append, where, isnan
 from numpy.typing import NDArray
 
 from perceptron import Perceptron
@@ -178,8 +177,10 @@ class Brain(Perceptron):
         # Can not delete outputs from last layer...
         # ...cuz it has its own special structure
         layers_excluding_last = self.layers[:-1]
+
         index = get_index_by_decimal(layers_excluding_last, layer_adress)
         layer = self.layers[index]
+
         outputs_number = layer.outputs_number
 
         if outputs_number == 1:
@@ -189,6 +190,7 @@ class Brain(Perceptron):
             decimal=output_adress,
         )
         layer.delete_output(output_index)
+
         # Delete due weights of next layer
         next_layer = self.layers[index + 1]
         next_layer.delete_input(output_index)
@@ -274,9 +276,8 @@ class Brain(Perceptron):
 
     def __call__(
         self, input_values: Iterable,
-        time_limit: int | float = 60, steps_limit: int = -1,
+        time_limit: int | float = 60, steps_limit: int | NoneType = None,
         reflections_limit: int = 7, transform=True, introspect=True,
-        just_last_resoult=False, due_resoults_length=False,
         verbalize=False,
     ) -> list[NDArray[float]] | list:
         """
@@ -288,12 +289,12 @@ class Brain(Perceptron):
             Input iterable by axis=1 must provide due number of cells
             to number of signifuing inputs of the net to provide reflections.
 
-            time_limit (int | float):
+            time_limit (int | float | NoneType):
             Ensures that the calculation stops
             after the specified time has passed,
             without waiting a stopping signal,
             Positive,
-            -1 for unlimited time.
+            None for unlimited steps.
             Defaults to 60.
 
             steps_limit (int | NoneType):
@@ -301,16 +302,16 @@ class Brain(Perceptron):
             after the specified number of steps has passed -
             single forvard propogations within the perceptron,
             Positive,
-            -1 for unlimited steps.
-            Defaults to -1.
+            None for unlimited steps.
+            Defaults to None.
 
-            reflections_limit (int):
+            reflections_limit (int | NoneType):
             Limitation on the number of reflection levels,
             i.e. recursion iterations,
             Warning - it doesen't stop after reaching of limit,
             turns back to reflection number 0 instead,
             Positive,
-            -1 for unlimited reflections.
+            None for unlimited reflections.
             Defaults to 7.
 
             transform (bool):
@@ -323,15 +324,6 @@ class Brain(Perceptron):
             thus providing memorization and zero-shot learning.
             Defaults to True.
 
-            just_last_resoult (bool):
-            Provides a result of only the last step of the calculation
-            and not store the entire chain of results in memory.
-            Defaults to False.
-
-            do_not_skip_repeat_and_stop (bool):
-            Provides a result equal in length to the input data.
-            Defaults to False.
-
             verbalize (bool):
             Output data about the calculation process to the console.
             Defaults to False.
@@ -343,17 +335,17 @@ class Brain(Perceptron):
         Returns:
             list[NDArray[float]] | list[]: a resoulting list
         """
-        # Atributes for working of decorators
-        self._transform = transform
-        self._introspect = introspect
-        self.__class__._verbalize = verbalize
+        stop_reset = ['STOP', 'RESET_REFLECTIONS', 'STOP_BY_LIMIT']
 
-        # Alias
-        DRL = due_resoults_length
+        # Atributes for working of decorators
+        self._transforming_error_flag = 0
+
+        self._transform: bool = transform
+        self._introspect: bool = introspect
+        self.__class__._verbalize: bool = verbalize
 
         # Start of timer
-        if time_limit != -1:
-            start_time = time()
+        start_time: float = time()
 
         # Start of steps counting
         steps_counter = 0
@@ -362,83 +354,61 @@ class Brain(Perceptron):
         controlling_signal = 'NOTHING'
 
         # Fill initial reading_memory_inputs_values by zero values
-        rmi_values = [0,] * self.reading_memory.blocks_number
+        self._rmi_values: list[int] | list[float] = [0,]\
+            * self.reading_memory.blocks_number
 
         # Reflections loop
         while True:
             resoults = list()
-            signifying_inputs_values_sqnce = input_values
+            signifying_inputs_values_sqnce: Iterable = input_values
 
             # Reflections
-            reflections_counter = 0
+            reflections_counter: int = 0
             while True:
-                if reflections_limit != -1:
+                if reflections_limit:
                     if reflections_counter >= reflections_limit:
                         self.verb(
-                            f'\nREFLECTIONS LIMIT {reflections_limit}',
-                            'IS REACHED: STOP REFLECTIONS',
+                            f'REFLECTIONS LIMIT {reflections_limit}',
+                            'IS REACHED: RESET REFLECTIONS',
                         )
-                        controlling_signal = 'STOP_REFLECTIONS'
+                        controlling_signal = 'RESET_REFLECTIONS'
                         break
 
-                resoults = list()
                 # Iterations
+                resoults = list()
                 for signifying_inputs_values in signifying_inputs_values_sqnce:
-                    if not due_resoults_length:
-                        if controlling_signal == 'SKIP':
-                            controlling_signal = 'NOTHING'
-                            self.verb('\nSKIPPED')
-                            continue
+                    if controlling_signal == 'SKIP':
+                        controlling_signal = 'NOTHING'
+                        self.verb('SKIPPED')
+                        continue
+
                     # Repeating
                     while True:
-                        current_time = time()
+                        # Get passed time
+                        passed_time: float = time() - start_time
 
-                        # Stop by time limit
-                        if time_limit != -1:
-                            if time_limit < current_time - start_time:
-                                controlling_signal = 'STOP'
-                                self.verb('\nMUST BE STOPPED BY TIME LIMIT')
-                                break
-
-                        # Stop by steps limit
-                        if steps_limit != -1 and steps_limit < steps_counter:
-                            controlling_signal = 'STOP'
-                            self.verb('\nMUST BE STOPPED BY STEP LIMIT')
-                            break
-
-                        # Get outputs as list of float signals and
-                        # Split floats list to valuable floats lists
-                        inputs_values_list = [
-                            *signifying_inputs_values,
-                            current_time,
-                            time_limit,
-                            self._transforming_error_flag,
-                            reflections_counter,
-                            reflections_limit,
-                            steps_counter,
-                            steps_limit,
-                            *rmi_values,
-                        ]
-
-                        self.verb(
-                            f'\nCURRENT INPUTS: {signifying_inputs_values}',
+                        self.verbalize_input_values(
+                            signifying_inputs_values,
+                            passed_time, time_limit,
+                            reflections_counter, reflections_limit,
+                            steps_counter, steps_limit,
                         )
-                        self.verb(f'TIME LIMIT: {time_limit}')
-                        self.verb(
-                            'TRASFORMATION ERROR ON PREVIOUS STEP: ',
-                            self._transforming_error_flag,
+
+                        inputs_values_list = self.turn_Nones_negative_ones(
+                            [
+                                *signifying_inputs_values,
+                                passed_time, time_limit,
+                                self._transforming_error_flag,
+                                reflections_counter, reflections_limit,
+                                steps_counter, steps_limit,
+                                *self._rmi_values,
+                            ]
                         )
-                        self.verb(f'REFLECTION NUMBER: {reflections_counter}')
-                        self.verb(f'REFLECTIONS LIMIT: {reflections_limit}')
-                        self.verb(f'STEPS NUMBER: {steps_counter}')
-                        self.verb(f'STEPS LIMIT: {steps_limit}')
-                        self.verb(f'CONTROLLING SIGNAL: {controlling_signal}')
-                        self.verb(f'RESOULTS: {resoults}')
                         (
                             signifying_outputs_values,
                             controlling_signal_outputs_values,
                             transforming_outputs_values,
-                            writting_memory_outputs_values,
+                            writing_memory_outputs_values,
                             reading_memory_outputs_values,
 
                         ) = split_by_volumes(
@@ -455,139 +425,272 @@ class Brain(Perceptron):
                             self.CONTROLLING_SIGNALS,
                             controlling_signal_outputs_values[-1],
                         )
-                        self.verb(f'\nCONTROLLING SIGNAL: {controlling_signal}')
+                        self.verb(f'CONTROLLING SIGNAL: {controlling_signal}')
 
                         # Introspection
-                        self.writing_memory.write_weights(
-                            writting_memory_outputs_values,
-                        )
-                        rmi_values = self.reading_memory.read_weights(
-                            reading_memory_outputs_values,
-                        )
+                        self.writing_memory\
+                            .write_weights(writing_memory_outputs_values)
+
+                        self._rmi_values = self.reading_memory\
+                            .read_weights(reading_memory_outputs_values)
 
                         # Transforming
-                        (
-                            transform_signal_output_value,
-                            layer_adress_output_value,
-                            output_adress_output_value,
-
-                        ) = split_by_volumes(
-                            list_for_split=transforming_outputs_values,
-                            volumes=self.T_O_BS.values(),
-                            get_rest=False,
-                        )
-                        signal = get_element_by_decimal(
-                            self.TRANSFORMING_SIGNALS,
-                            transform_signal_output_value,
-                        )
-                        self.verb(f'\nTRANSFORMING SIGNAL: {signal}')
-
-                        # Add or delete reading memory neurons
-                        if signal == self.APPEND_RM_IO_B_SIGNAL:
-                            self.reading_memory.append_block()
-
-                        elif signal == self.POP_RM_IO_B_SIGNAL:
-                           self.reading_memory.pop_block()
-
-                        # Add or delete neuron
-                        if signal == 'APPEND_OUTPUT':
-                            self.append_output_to_layer(layer_adress_output_value)
-
-                        elif signal == 'DELETE_OUTPUT':
-                            self.delete_output_from_layer(
-                                layer_adress_output_value,
-                                output_adress_output_value,
-                            )
-
-                        # Add or delete writting memory neurons
-                        elif signal == 'APPEND_WRITTING_MEMORY_OUTPUTS_BLOCK':
-                            self.writing_memory.append_block()
-
-                        elif signal == 'POP_WRITTING_MEMORY_OUTPUTS_BLOCK':
-                            self.writing_memory.pop_block()
+                        self.transform(transforming_outputs_values)
 
                         # Add character to list of resoults
-                        if just_last_resoult:
-                            resoults = [signifying_outputs_values,]
-                        else:
-                            resoults.append(signifying_outputs_values)
+                        resoults.append(signifying_outputs_values)
+                        self.verb(f'RESOULTS: {resoults}')
 
                         # Increase steps counter
                         steps_counter += 1
 
-                        # Stop repeating
-                        if due_resoults_length:
+                        # Stop by time limit
+                        if time_limit and time_limit < passed_time:
+                            controlling_signal = 'STOP_BY_LIMIT'
+                            self.verb('STOPPED BY TIME LIMIT')
                             break
+
+                        # Stop by steps limit
+                        if steps_limit and steps_limit < steps_counter:
+                            controlling_signal = 'STOP_BY_LIMIT'
+                            self.verb('STOPPED BY STEP LIMIT')
+                            break
+
+                        # Stop repeating
                         if controlling_signal != 'REPEAT':
                             break
                         else:
-                            self.verb('\nREPEATING')
+                            self.verb('REPEATING OF STEP')
 
                     # Stop iterations
-                    if controlling_signal == 'STOP':
-                        if DRL and len(resoults) != len(input_values):
-                            self.verb(
-                                '\nCAN`T STOP',
-                                '\nCUZ THE LENGTH OF RESOULTS',
-                                'IS NOT EQUAL TO LENGTH OF INPUT VALUES',
-                            )
-                            pass
-                        else:
-                            break
-                    elif controlling_signal == 'STOP_REFLECTIONS':
-                        if DRL and len(resoults) != len(input_values):
-                            self.verb(
-                                '\nCAN`T BREAK REFLECTIONS',
-                                '\nCUZ THE LENGTH OF RESOULTS',
-                                'IS NOT EQUAL TO LENGTH OF INPUT VALUES',
-                            )
-                            pass
-                        else:
-                            break
-                    self.verb('\nNEXT ITERATION')
+                    if controlling_signal in stop_reset:
+                        self.verb('CONTROLLING SIGNAL IS ')
+                        self.verb(f'"{controlling_signal}"')
+                        self.verb('SO NEXT ITERATION IS IMPOSIBLE')
+                        break
+
+                    self.verb('NEXT ITERATION')
 
                 # Stop reflection
-                if controlling_signal == 'STOP':
-                    if DRL and len(resoults) != len(input_values):
-                        self.verb(
-                            '\nCAN`T STOP',
-                            '\nCUZ THE LENGTH OF RESOULTS',
-                            'IS NOT EQUAL TO LENGTH OF INPUT VALUES',
-                        )
-                        pass
-                    else:
-                        break
+                if controlling_signal in stop_reset:
+                    self.verb('CONTROLLING SIGNAL IS ')
+                    self.verb(f'"{controlling_signal}"')
+                    self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+                    break
 
-                elif controlling_signal == 'STOP_REFLECTIONS':
-                    if DRL and len(resoults) != len(input_values):
-                        self.verb(
-                            '\nCAN`T BREAK REFLECTIONS',
-                            '\nCUZ THE LENGTH OF RESOULTS',
-                            'IS NOT EQUAL TO LENGTH OF INPUT VALUES',
-                        )
-                        pass
-                    else:
-                        break
                 # Resoults are empty or not enough for the next reflect
                 elif self.inputs_number != self.outputs_number:
+                    self.verb('INPUTS AND OUTPUTS ARE INCOMPLETABLE')
+                    self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
                     break
                 elif resoults == list():
                     self.verb('RESOULTS ARE EMPTY')
-                    break
-                elif just_last_resoult:
+                    self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
                     break
 
                 # Prepare request for new reflection from results
                 signifying_inputs_values_sqnce = resoults
                 reflections_counter += 1
-                self.verb(f'\nRESOLTS LENGTH: {len(resoults)}')
-                self.verb('\nNEXT REFLECTION')
+                self.verb('NEXT REFLECTION')
 
             # Stop reflections loop
-            if controlling_signal != 'STOP_REFLECTIONS':
+            if controlling_signal != 'RESET_REFLECTIONS':
+                self.verb('THE END.\n')
                 break
-            self.verb('\nREFLECTIONS ARE RESET')
+            self.verb('REFLECTIONS ARE RESET')
         return resoults
+
+    # def calculate_with_due_resoults_length(
+    #     self, input_values: Iterable,
+    #     time_limit: int | float = 60, steps_limit: int = -1,
+    #     reflections_limit: int = 7, transform=True, introspect=True,
+    #     verbalize=False,
+    # ) -> list[NDArray[float]] | list:
+
+    #     self.prepare_for_calculating(time_limit, steps_limit, reflections_limit)
+
+    #     # Reflections loop
+    #     while True:
+    #         resoults = list()
+    #         signifying_inputs_values_sqnce = input_values
+
+    #         # Reflections
+    #         reflections_counter = 0
+    #         while True:
+    #             if reflections_limit != -1:
+    #                 if reflections_counter >= reflections_limit:
+    #                     self.verb(
+    #                         f'REFLECTIONS LIMIT {reflections_limit}',
+    #                         'IS REACHED: RESET REFLECTIONS',
+    #                     )
+    #                     controlling_signal = 'RESET_REFLECTIONS'
+    #                     break
+
+    #             # Iterations
+    #             resoults = list()
+    #             for signifying_inputs_values in signifying_inputs_values_sqnce:
+    #                 # Get passed time
+    #                 self.make_one_step()
+
+    #                 # Stop iterations
+    #                 are_same_length = len(resoults) == len(input_values)
+
+    #                 # Stop by time limit
+    #                 if time_limit != -1 and time_limit < passed_time:
+    #                     if are_same_length:
+    #                         controlling_signal = 'STOP'
+    #                         self.verb('STOPPED BY TIME LIMIT')
+    #                         break
+    #                     self.verb('RESOULT AND INPUT AREN`T SAME LENGTH')
+    #                     self.verb('CAN`T BE STOPPED BY TIME LIMIT')
+
+    #                 # Stop by steps limit
+    #                 elif steps_limit != -1 and steps_limit < steps_counter:
+    #                     if are_same_length:
+    #                         controlling_signal = 'STOP'
+    #                         self.verb('STOPPED BY STEP LIMIT')
+    #                         break
+    #                     self.verb('RESOULT AND INPUT AREN`T SAME LENGTH')
+    #                     self.verb('CAN`T BE STOPPED BY STEP LIMIT')
+
+    #                 # Stop by signals
+    #                 elif controlling_signal in stop_reset:
+    #                     if are_same_length:
+    #                         self.verb(
+    #                             'CONTROLLING SIGNAL IS', 
+    #                             f'"{controlling_signal}"',
+    #                         )
+    #                         self.verb('SO NEXT ITERATION IS IMPOSIBLE')
+    #                         break
+    #                     self.verb('RESOULT AND INPUT AREN`T SAME LENGTH')
+    #                     self.verb('CAN`T BE STOPPED')
+
+    #                 self.verb('NEXT ITERATION')
+
+    #             # Stop reflection
+    #             if controlling_signal in stop_reset:
+    #                 self.verb(f'CONTROLLING SIGNAL IS "{controlling_signal}"')
+    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+    #                 break
+
+    #             # Resoults are empty or not enough for the next reflect
+    #             elif self.inputs_number != self.outputs_number:
+    #                 self.verb('INPUTS AND OUTPUTS ARE INCOMPLETABLE')
+    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+    #                 break
+    #             elif resoults == list():
+    #                 self.verb('RESOULTS ARE EMPTY')
+    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+    #                 break
+
+    #             # Prepare request for new reflection from results
+    #             signifying_inputs_values_sqnce = resoults
+    #             reflections_counter += 1
+    #             self.verb('NEXT REFLECTION')
+
+    #         # Stop reflections loop
+    #         if controlling_signal != 'RESET_REFLECTIONS':
+    #             self.verb('THE END.\n')
+    #             break
+    #         self.verb('REFLECTIONS ARE RESET')
+    #     return resoults
+
+    # def calculate_with_just_last_resoult(
+    #     self, input_values: Iterable,
+    #     time_limit: int | float = 60, steps_limit: int = -1,
+    #     reflections_limit: int = 7, transform=True, introspect=True,
+    #     verbalize=False,
+    # ) -> list[NDArray[float]] | list:
+
+    #     self.prepare_for_calculating()
+
+    #     # Reflections loop
+    #     while True:
+    #         resoults = list()
+    #         signifying_inputs_values_sqnce = input_values
+
+    #         # Reflections
+    #         reflections_counter = 0
+    #         while True:
+    #             if reflections_limit != -1:
+    #                 if reflections_counter >= reflections_limit:
+    #                     self.verb(
+    #                         f'REFLECTIONS LIMIT {reflections_limit}',
+    #                         'IS REACHED: RESET REFLECTIONS',
+    #                     )
+    #                     controlling_signal = 'RESET_REFLECTIONS'
+    #                     break
+
+    #             # Iterations
+    #             resoults = list()
+    #             for signifying_inputs_values in signifying_inputs_values_sqnce:
+    #                 if controlling_signal == 'SKIP':
+    #                     controlling_signal = 'NOTHING'
+    #                     self.verb('SKIPPED')
+    #                     continue
+
+    #                 # Repeating
+    #                 while True:
+    #                     # Get passed time
+    #                     self.make_one_step()
+
+    #                     # Stop repeating
+    #                     if self._controlling_signal != 'REPEAT':
+    #                         break
+    #                     else:
+    #                         self.verb('REPEATING OF STEP')
+
+    #                     # Stop by time limit
+    #                     is_tl_reached = self._time_limit < self._passed_time
+    #                     if self._time_limit != -1 and is_tl_reached:
+    #                         self._controlling_signal = 'STOP'
+    #                         self.verb('STOPPED BY TIME LIMIT')
+    #                         break
+
+    #                     # Stop by steps limit
+    #                     is_sl_reached = self._steps_limit < self._steps_counter
+    #                     if self._steps_limit != -1 and is_sl_reached:
+    #                         self._controlling_signal = 'STOP'
+    #                         self.verb('STOPPED BY STEP LIMIT')
+    #                         break
+
+    #                 # Stop iterations
+    #                 if controlling_signal in stop_reset:
+    #                     self.verb(
+    #                         f'CONTROLLING SIGNAL IS "{controlling_signal}"',
+    #                     )
+    #                     self.verb('SO NEXT ITERATION IS IMPOSIBLE')
+    #                     break
+
+    #                 self.verb('NEXT ITERATION')
+
+    #             # Stop reflection
+    #             if controlling_signal in stop_reset:
+    #                 self.verb(f'CONTROLLING SIGNAL IS "{controlling_signal}"')
+    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+    #                 break
+
+    #             # Resoults are empty or not enough for the next reflect
+    #             elif self.inputs_number != self.outputs_number:
+    #                 self.verb('INPUTS AND OUTPUTS ARE INCOMPLETABLE')
+    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+    #                 break
+    #             elif resoults == list():
+    #                 self.verb('RESOULTS ARE EMPTY')
+    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+    #                 break
+
+    #             # Prepare request for new reflection from results
+    #             signifying_inputs_values_sqnce = resoults
+    #             reflections_counter += 1
+    #             self.verb('NEXT REFLECTION')
+
+    #         # Stop reflections loop
+    #         if controlling_signal != 'RESET_REFLECTIONS':
+    #             self.verb('THE END.\n')
+    #             break
+    #         self.verb('REFLECTIONS ARE RESET')
+    #     return resoults
 
     @property
     def first_layer(self):
@@ -667,8 +770,5 @@ if __name__ == '__main__':
     print(
         BigBrain()(
             [[789], [7], [8], [9], [1], [0], [5], [6]],
-            verbalize=True,
-            due_resoults_length=True,
-            time_limit=-1,
         ),
     )
