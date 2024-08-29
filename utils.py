@@ -45,16 +45,6 @@ def split_by_volumes(
     return resoults_list
 
 
-def get_unicode_characters_by_ranges(ranges: list[tuple[int]]) -> str:
-    string_characters = list()
-    for start, finish in ranges:
-        if finish < start:
-            raise ValueError('Start value of range is bigger thn finish value')
-        for number in range(start, finish + 1):
-            string_characters.append(chr(number))
-    return ''.join(string_characters)
-
-
 def mean(sequence) -> float:
     if len(sequence) < 2:
         raise ValueError('Sequence must contain at least two elements')
