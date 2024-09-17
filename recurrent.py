@@ -1,14 +1,19 @@
 from time import time
 from typing import Callable, Iterable
 from types import NoneType
+from json import dump, load
+from pathlib import Path
 
-from numpy import array, append, where, isnan
+from numpy import array
 from numpy.typing import NDArray
 
 from perceptron import Perceptron
 from memory import ReadingMemory, WritingMemory
 from utils import (
-    dict_sum, split_by_volumes, get_index_by_decimal, get_element_by_decimal,
+    check_dir_path_slash_ending,
+    dict_sum, split_by_volumes,
+    get_index_by_decimal,
+    get_element_by_decimal,
 )
 
 
@@ -500,197 +505,351 @@ class Brain(Perceptron):
             self.verb('REFLECTIONS ARE RESET')
         return resoults
 
-    # def calculate_with_due_resoults_length(
-    #     self, input_values: Iterable,
-    #     time_limit: int | float = 60, steps_limit: int = -1,
-    #     reflections_limit: int = 7, transform=True, introspect=True,
-    #     verbalize=False,
-    # ) -> list[NDArray[float]] | list:
+    def calculate_with_due_resoults_length(
+        self, input_values: Iterable,
+        time_limit: int | float = 60, steps_limit: int | NoneType = None,
+        reflections_limit: int = 7, transform=True, introspect=True,
+        verbalize=False,
+    ) -> list[NDArray[float]] | list:
 
-    #     self.prepare_for_calculating(time_limit, steps_limit, reflections_limit)
+        stop_reset = ['STOP', 'RESET_REFLECTIONS', 'STOP_BY_LIMIT']
 
-    #     # Reflections loop
-    #     while True:
-    #         resoults = list()
-    #         signifying_inputs_values_sqnce = input_values
+        # Atributes for working of decorators
+        self._transforming_error_flag = 0
 
-    #         # Reflections
-    #         reflections_counter = 0
-    #         while True:
-    #             if reflections_limit != -1:
-    #                 if reflections_counter >= reflections_limit:
-    #                     self.verb(
-    #                         f'REFLECTIONS LIMIT {reflections_limit}',
-    #                         'IS REACHED: RESET REFLECTIONS',
-    #                     )
-    #                     controlling_signal = 'RESET_REFLECTIONS'
-    #                     break
+        self._transform: bool = transform
+        self._introspect: bool = introspect
+        self.__class__._verbalize: bool = verbalize
 
-    #             # Iterations
-    #             resoults = list()
-    #             for signifying_inputs_values in signifying_inputs_values_sqnce:
-    #                 # Get passed time
-    #                 self.make_one_step()
+        # Start of timer
+        start_time: float = time()
 
-    #                 # Stop iterations
-    #                 are_same_length = len(resoults) == len(input_values)
+        # Start of steps counting
+        steps_counter = 0
 
-    #                 # Stop by time limit
-    #                 if time_limit != -1 and time_limit < passed_time:
-    #                     if are_same_length:
-    #                         controlling_signal = 'STOP'
-    #                         self.verb('STOPPED BY TIME LIMIT')
-    #                         break
-    #                     self.verb('RESOULT AND INPUT AREN`T SAME LENGTH')
-    #                     self.verb('CAN`T BE STOPPED BY TIME LIMIT')
+        # initial controlling signal is always do nothing
+        controlling_signal = 'NOTHING'
 
-    #                 # Stop by steps limit
-    #                 elif steps_limit != -1 and steps_limit < steps_counter:
-    #                     if are_same_length:
-    #                         controlling_signal = 'STOP'
-    #                         self.verb('STOPPED BY STEP LIMIT')
-    #                         break
-    #                     self.verb('RESOULT AND INPUT AREN`T SAME LENGTH')
-    #                     self.verb('CAN`T BE STOPPED BY STEP LIMIT')
+        # Fill initial reading_memory_inputs_values by zero values
+        self._rmi_values: list[int] | list[float] = [0,]\
+            * self.reading_memory.blocks_number
 
-    #                 # Stop by signals
-    #                 elif controlling_signal in stop_reset:
-    #                     if are_same_length:
-    #                         self.verb(
-    #                             'CONTROLLING SIGNAL IS', 
-    #                             f'"{controlling_signal}"',
-    #                         )
-    #                         self.verb('SO NEXT ITERATION IS IMPOSIBLE')
-    #                         break
-    #                     self.verb('RESOULT AND INPUT AREN`T SAME LENGTH')
-    #                     self.verb('CAN`T BE STOPPED')
+        # Reflections loop
+        while True:
+            resoults = list()
+            signifying_inputs_values_sqnce: Iterable = input_values
 
-    #                 self.verb('NEXT ITERATION')
+            # Reflections
+            reflections_counter = 0
+            while True:
+                if reflections_limit:
+                    if reflections_counter >= reflections_limit:
+                        self.verb(
+                            f'REFLECTIONS LIMIT {reflections_limit}',
+                            'IS REACHED: RESET REFLECTIONS',
+                        )
+                        controlling_signal = 'RESET_REFLECTIONS'
+                        break
 
-    #             # Stop reflection
-    #             if controlling_signal in stop_reset:
-    #                 self.verb(f'CONTROLLING SIGNAL IS "{controlling_signal}"')
-    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
-    #                 break
+                # Iterations
+                resoults = list()
+                for signifying_inputs_values in signifying_inputs_values_sqnce:
+                    # Get passed time
+                    passed_time: float = time() - start_time
 
-    #             # Resoults are empty or not enough for the next reflect
-    #             elif self.inputs_number != self.outputs_number:
-    #                 self.verb('INPUTS AND OUTPUTS ARE INCOMPLETABLE')
-    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
-    #                 break
-    #             elif resoults == list():
-    #                 self.verb('RESOULTS ARE EMPTY')
-    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
-    #                 break
+                    self.verbalize_input_values(
+                        signifying_inputs_values,
+                        passed_time, time_limit,
+                        reflections_counter, reflections_limit,
+                        steps_counter, steps_limit,
+                    )
 
-    #             # Prepare request for new reflection from results
-    #             signifying_inputs_values_sqnce = resoults
-    #             reflections_counter += 1
-    #             self.verb('NEXT REFLECTION')
+                    inputs_values_list = self.turn_Nones_negative_ones(
+                        [
+                            *signifying_inputs_values,
+                            passed_time, time_limit,
+                            self._transforming_error_flag,
+                            reflections_counter, reflections_limit,
+                            steps_counter, steps_limit,
+                            *self._rmi_values,
+                        ]
+                    )
+                    (
+                        signifying_outputs_values,
+                        controlling_signal_outputs_values,
+                        transforming_outputs_values,
+                        writing_memory_outputs_values,
+                        reading_memory_outputs_values,
 
-    #         # Stop reflections loop
-    #         if controlling_signal != 'RESET_REFLECTIONS':
-    #             self.verb('THE END.\n')
-    #             break
-    #         self.verb('REFLECTIONS ARE RESET')
-    #     return resoults
+                    ) = split_by_volumes(
+                        list_for_split=super().__call__(
+                            array(inputs_values_list),
+                        ),
+                        volumes=self.outputs_structure.values(),
+                        extract_single_values=False,
+                        get_rest=False,
+                    )
 
-    # def calculate_with_just_last_resoult(
-    #     self, input_values: Iterable,
-    #     time_limit: int | float = 60, steps_limit: int = -1,
-    #     reflections_limit: int = 7, transform=True, introspect=True,
-    #     verbalize=False,
-    # ) -> list[NDArray[float]] | list:
+                    # Get controlling signal
+                    controlling_signal = get_element_by_decimal(
+                        self.CONTROLLING_SIGNALS,
+                        controlling_signal_outputs_values[-1],
+                    )
+                    self.verb(f'CONTROLLING SIGNAL: {controlling_signal}')
+                    if controlling_signal in ['SKIP', 'REPEAT']:
+                        self.verb('SIGNAL OPERATION IS IMPOSSIBLE')
+                        self.verb('CUZ DUE RESOULTS LENGTH IS ACTIVE')
 
-    #     self.prepare_for_calculating()
+                    # Introspection
+                    self.writing_memory\
+                        .write_weights(writing_memory_outputs_values)
 
-    #     # Reflections loop
-    #     while True:
-    #         resoults = list()
-    #         signifying_inputs_values_sqnce = input_values
+                    self._rmi_values = self.reading_memory\
+                        .read_weights(reading_memory_outputs_values)
 
-    #         # Reflections
-    #         reflections_counter = 0
-    #         while True:
-    #             if reflections_limit != -1:
-    #                 if reflections_counter >= reflections_limit:
-    #                     self.verb(
-    #                         f'REFLECTIONS LIMIT {reflections_limit}',
-    #                         'IS REACHED: RESET REFLECTIONS',
-    #                     )
-    #                     controlling_signal = 'RESET_REFLECTIONS'
-    #                     break
+                    # Transforming
+                    self.transform(transforming_outputs_values)
 
-    #             # Iterations
-    #             resoults = list()
-    #             for signifying_inputs_values in signifying_inputs_values_sqnce:
-    #                 if controlling_signal == 'SKIP':
-    #                     controlling_signal = 'NOTHING'
-    #                     self.verb('SKIPPED')
-    #                     continue
+                    # Add character to list of resoults
+                    resoults.append(signifying_outputs_values)
+                    self.verb(f'RESOULTS: {resoults}')
 
-    #                 # Repeating
-    #                 while True:
-    #                     # Get passed time
-    #                     self.make_one_step()
+                    # Increase steps counter
+                    steps_counter += 1
 
-    #                     # Stop repeating
-    #                     if self._controlling_signal != 'REPEAT':
-    #                         break
-    #                     else:
-    #                         self.verb('REPEATING OF STEP')
+                    # Stop iterations
+                    are_same_length = len(resoults) == len(input_values)
 
-    #                     # Stop by time limit
-    #                     is_tl_reached = self._time_limit < self._passed_time
-    #                     if self._time_limit != -1 and is_tl_reached:
-    #                         self._controlling_signal = 'STOP'
-    #                         self.verb('STOPPED BY TIME LIMIT')
-    #                         break
+                    # Stop by time limit
+                    if time_limit != -1 and time_limit < passed_time:
+                        if are_same_length:
+                            controlling_signal = 'STOP_BY_LIMIT'
+                            self.verb('STOPPED BY TIME LIMIT')
+                            break
+                        self.verb('RESOULT AND INPUT AREN`T SAME LENGTH')
+                        self.verb('CAN`T BE STOPPED BY TIME LIMIT')
 
-    #                     # Stop by steps limit
-    #                     is_sl_reached = self._steps_limit < self._steps_counter
-    #                     if self._steps_limit != -1 and is_sl_reached:
-    #                         self._controlling_signal = 'STOP'
-    #                         self.verb('STOPPED BY STEP LIMIT')
-    #                         break
+                    # Stop by steps limit
+                    elif steps_limit != -1 and steps_limit < steps_counter:
+                        if are_same_length:
+                            controlling_signal = 'STOP_BY_LIMIT'
+                            self.verb('STOPPED BY STEP LIMIT')
+                            break
+                        self.verb('RESOULT AND INPUT AREN`T SAME LENGTH')
+                        self.verb('CAN`T BE STOPPED BY STEP LIMIT')
 
-    #                 # Stop iterations
-    #                 if controlling_signal in stop_reset:
-    #                     self.verb(
-    #                         f'CONTROLLING SIGNAL IS "{controlling_signal}"',
-    #                     )
-    #                     self.verb('SO NEXT ITERATION IS IMPOSIBLE')
-    #                     break
+                    # Stop by signals
+                    elif controlling_signal in stop_reset:
+                        if are_same_length:
+                            self.verb(
+                                'CONTROLLING SIGNAL IS',
+                                f'"{controlling_signal}"',
+                            )
+                            self.verb('SO NEXT ITERATION IS IMPOSIBLE')
+                            break
+                        self.verb('RESOULT AND INPUT AREN`T SAME LENGTH')
+                        self.verb('CAN`T BE STOPPED')
 
-    #                 self.verb('NEXT ITERATION')
+                    self.verb('NEXT ITERATION')
 
-    #             # Stop reflection
-    #             if controlling_signal in stop_reset:
-    #                 self.verb(f'CONTROLLING SIGNAL IS "{controlling_signal}"')
-    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
-    #                 break
+                # Stop reflection
+                if controlling_signal in stop_reset:
+                    self.verb(f'CONTROLLING SIGNAL IS "{controlling_signal}"')
+                    self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+                    break
 
-    #             # Resoults are empty or not enough for the next reflect
-    #             elif self.inputs_number != self.outputs_number:
-    #                 self.verb('INPUTS AND OUTPUTS ARE INCOMPLETABLE')
-    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
-    #                 break
-    #             elif resoults == list():
-    #                 self.verb('RESOULTS ARE EMPTY')
-    #                 self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
-    #                 break
+                # Resoults are empty or not enough for the next reflect
+                elif self.inputs_number != self.outputs_number:
+                    self.verb('INPUTS AND OUTPUTS ARE INCOMPLETABLE')
+                    self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+                    break
+                elif resoults == list():
+                    self.verb('RESOULTS ARE EMPTY')
+                    self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+                    break
 
-    #             # Prepare request for new reflection from results
-    #             signifying_inputs_values_sqnce = resoults
-    #             reflections_counter += 1
-    #             self.verb('NEXT REFLECTION')
+                # Prepare request for new reflection from results
+                signifying_inputs_values_sqnce = resoults
+                reflections_counter += 1
+                self.verb('NEXT REFLECTION')
 
-    #         # Stop reflections loop
-    #         if controlling_signal != 'RESET_REFLECTIONS':
-    #             self.verb('THE END.\n')
-    #             break
-    #         self.verb('REFLECTIONS ARE RESET')
-    #     return resoults
+            # Stop reflections loop
+            if controlling_signal != 'RESET_REFLECTIONS':
+                self.verb('THE END.\n')
+                break
+            self.verb('REFLECTIONS ARE RESET')
+        return resoults
+
+    def calculate_with_just_last_resoult(
+        self, input_values: Iterable,
+        time_limit: int | float = 60, steps_limit: int | NoneType = None,
+        reflections_limit: int = 7, transform=True, introspect=True,
+        verbalize=False,
+    ) -> list[NDArray[float]] | list:
+        stop_reset = ['STOP', 'RESET_REFLECTIONS', 'STOP_BY_LIMIT']
+
+        # Atributes for working of decorators
+        self._transforming_error_flag = 0
+
+        self._transform: bool = transform
+        self._introspect: bool = introspect
+        self.__class__._verbalize: bool = verbalize
+
+        # Start of timer
+        start_time: float = time()
+
+        # Start of steps counting
+        steps_counter = 0
+
+        # initial controlling signal is always do nothing
+        controlling_signal = 'NOTHING'
+
+        # Fill initial reading_memory_inputs_values by zero values
+        self._rmi_values: list[int] | list[float] = [0,]\
+            * self.reading_memory.blocks_number
+
+        # Reflections loop
+        while True:
+            resoults = list()
+            signifying_inputs_values_sqnce: Iterable = input_values
+
+            # Reflections
+            reflections_counter: int = 0
+            while True:
+                if reflections_limit:
+                    if reflections_counter >= reflections_limit:
+                        self.verb(
+                            f'REFLECTIONS LIMIT {reflections_limit}',
+                            'IS REACHED: RESET REFLECTIONS',
+                        )
+                        controlling_signal = 'RESET_REFLECTIONS'
+                        break
+
+                # Iterations
+                resoults = list()
+                for signifying_inputs_values in signifying_inputs_values_sqnce:
+                    if controlling_signal == 'SKIP':
+                        controlling_signal = 'NOTHING'
+                        self.verb('SKIPPED')
+                        continue
+
+                    # Repeating
+                    while True:
+                        # Get passed time
+                        passed_time: float = time() - start_time
+
+                        self.verbalize_input_values(
+                            signifying_inputs_values,
+                            passed_time, time_limit,
+                            reflections_counter, reflections_limit,
+                            steps_counter, steps_limit,
+                        )
+
+                        inputs_values_list = self.turn_Nones_negative_ones(
+                            [
+                                *signifying_inputs_values,
+                                passed_time, time_limit,
+                                self._transforming_error_flag,
+                                reflections_counter, reflections_limit,
+                                steps_counter, steps_limit,
+                                *self._rmi_values,
+                            ]
+                        )
+                        (
+                            signifying_outputs_values,
+                            controlling_signal_outputs_values,
+                            transforming_outputs_values,
+                            writing_memory_outputs_values,
+                            reading_memory_outputs_values,
+
+                        ) = split_by_volumes(
+                            list_for_split=super().__call__(
+                                array(inputs_values_list),
+                            ),
+                            volumes=self.outputs_structure.values(),
+                            extract_single_values=False,
+                            get_rest=False,
+                        )
+
+                        # Get controlling signal
+                        controlling_signal = get_element_by_decimal(
+                            self.CONTROLLING_SIGNALS,
+                            controlling_signal_outputs_values[-1],
+                        )
+                        self.verb(f'CONTROLLING SIGNAL: {controlling_signal}')
+
+                        # Introspection
+                        self.writing_memory\
+                            .write_weights(writing_memory_outputs_values)
+
+                        self._rmi_values = self.reading_memory\
+                            .read_weights(reading_memory_outputs_values)
+
+                        # Transforming
+                        self.transform(transforming_outputs_values)
+
+                        # Add character to list of resoults
+                        resoults = [signifying_outputs_values]
+                        self.verb(f'RESOULTS: {resoults}')
+
+                        # Increase steps counter
+                        steps_counter += 1
+
+                        # Stop by time limit
+                        if time_limit and time_limit < passed_time:
+                            controlling_signal = 'STOP_BY_LIMIT'
+                            self.verb('STOPPED BY TIME LIMIT')
+                            break
+
+                        # Stop by steps limit
+                        if steps_limit and steps_limit < steps_counter:
+                            controlling_signal = 'STOP_BY_LIMIT'
+                            self.verb('STOPPED BY STEP LIMIT')
+                            break
+
+                        # Stop repeating
+                        if controlling_signal != 'REPEAT':
+                            break
+                        else:
+                            self.verb('REPEATING OF STEP')
+
+                    # Stop iterations
+                    if controlling_signal in stop_reset:
+                        self.verb('CONTROLLING SIGNAL IS ')
+                        self.verb(f'"{controlling_signal}"')
+                        self.verb('SO NEXT ITERATION IS IMPOSIBLE')
+                        break
+
+                    self.verb('NEXT ITERATION')
+
+                # Stop reflection
+                if controlling_signal in stop_reset:
+                    self.verb('CONTROLLING SIGNAL IS ')
+                    self.verb(f'"{controlling_signal}"')
+                    self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+                    break
+
+                # Resoults are empty or not enough for the next reflect
+                elif self.inputs_number != self.outputs_number:
+                    self.verb('INPUTS AND OUTPUTS ARE INCOMPLETABLE')
+                    self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+                    break
+                elif resoults == list():
+                    self.verb('RESOULTS ARE EMPTY')
+                    self.verb('SO NEXT REFLECTION IS IMPOSIBLE')
+                    break
+
+                # Prepare request for new reflection from results
+                signifying_inputs_values_sqnce = resoults
+                reflections_counter += 1
+                self.verb('NEXT REFLECTION')
+
+            # Stop reflections loop
+            if controlling_signal != 'RESET_REFLECTIONS':
+                self.verb('THE END.\n')
+                break
+            self.verb('REFLECTIONS ARE RESET')
+        return resoults
 
     @property
     def first_layer(self):
@@ -767,8 +926,11 @@ if __name__ == '__main__':
     class BigBrain(Brain):
         INITIAL_MIDDLE_LAYERS_STRUCTURE = 100 * [10 ** 3,]
 
-    print(
-        BigBrain()(
-            [[789], [7], [8], [9], [1], [0], [5], [6]],
-        ),
-    )
+    for iteration in range(100):
+        print(f'\nITERATION NUMBER {iteration}\n')
+        print(
+            BigBrain().calculate_with_just_last_resoult(
+                [[789], [7], [8], [9], [1], [0], [5], [6]],
+                verbalize=True,
+            ),
+        )
