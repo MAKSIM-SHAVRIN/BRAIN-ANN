@@ -2,9 +2,7 @@ from typing import Callable
 from numpy import append
 from numpy.typing import NDArray
 
-from utils import (
-    dict_sum, split_by_volumes, get_index_by_decimal, get_element_by_decimal,
-)
+from utils import dict_sum, split_by_volumes, get_index_by_decimal
 
 
 class Memory:
@@ -69,7 +67,8 @@ class WritingMemory(Memory):
             - self.brain.CONTROLLING_SIGNAL_OUTPUTS_NUMBER\
             - dict_sum(self.brain.TRANSFORMING_OUTPUTS_BLOCK_STRUCTURE)\
             - self.brain.reading_memory.outputs_number
-        resoult = writing_memory_outputs_number / dict_sum(self.BLOCK_STRUCTURE)
+        resoult = writing_memory_outputs_number\
+            / dict_sum(self.BLOCK_STRUCTURE)
         return round(resoult)
 
     @property
