@@ -1,6 +1,6 @@
 from recurrent import Brain
-from numpy.typing import NDArray
 from codecs import decode
+from types import NoneType
 
 
 ASCII_RANGE = (0x0020, 0x007E)
@@ -38,13 +38,27 @@ def translate_outputs_sequence_to_string(
         characters.append(char)
     return ''.join(characters)
 
+
 class ChatBot(Brain):
-    def get_answer(self, question: str) -> str:
-        ascii_question = repr(question)[1 : -1]
+    def get_answer(
+        self, question: str,
+        time_limit: int | float = 60, steps_limit: int | NoneType = None,
+        reflections_limit: int = 7, transform=True, introspect=True,
+        verbalize=False,
+    ) -> str:
+        ascii_question = repr(question)[1: -1]
         input_sequence = translate_string_to_inputs_sequence(
             ascii_question, get_unicode_characters_by_ranges(),
         )
-        output_sequence = self(input_sequence)
+        output_sequence = self(
+            input_sequence,
+            time_limit=time_limit,
+            steps_limit=steps_limit,
+            reflections_limit=reflections_limit,
+            transform=transform,
+            introspect=introspect,
+            verbalize=verbalize,
+        )
         ascii_answer = translate_outputs_sequence_to_string(
             output_sequence, get_unicode_characters_by_ranges(),
         )
