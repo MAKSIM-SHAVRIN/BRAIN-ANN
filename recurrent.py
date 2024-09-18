@@ -335,6 +335,30 @@ class Brain(Perceptron):
 
         return signifying_outputs_values, controlling_signal
 
+    def prepare_calculation(self, transform, introspect, verbalize):
+        stop_reset = ['STOP', 'RESET_REFLECTIONS', 'STOP_BY_LIMIT']
+
+        # Atributes for working of decorators
+        self._transforming_error_flag = 0
+
+        self._transform: bool = transform
+        self._introspect: bool = introspect
+        self.__class__._verbalize: bool = verbalize
+
+        # Start of timer
+        start_time: float = time()
+
+        # Start of steps counting
+        steps_counter = 0
+
+        # initial controlling signal is always do nothing
+        controlling_signal = 'NOTHING'
+
+        # Fill initial reading_memory_inputs_values by zero values
+        self._rmi_values: list[int] | list[float] = [0,]\
+            * self.reading_memory.blocks_number
+        return stop_reset, start_time, steps_counter, controlling_signal
+
     def __call__(
         self, input_values: Iterable,
         time_limit: int | float = 60, steps_limit: int | NoneType = None,
@@ -396,27 +420,8 @@ class Brain(Perceptron):
         Returns:
             list[NDArray[float]] | list[]: a resoulting list
         """
-        stop_reset = ['STOP', 'RESET_REFLECTIONS', 'STOP_BY_LIMIT']
-
-        # Atributes for working of decorators
-        self._transforming_error_flag = 0
-
-        self._transform: bool = transform
-        self._introspect: bool = introspect
-        self.__class__._verbalize: bool = verbalize
-
-        # Start of timer
-        start_time: float = time()
-
-        # Start of steps counting
-        steps_counter = 0
-
-        # initial controlling signal is always do nothing
-        controlling_signal = 'NOTHING'
-
-        # Fill initial reading_memory_inputs_values by zero values
-        self._rmi_values: list[int] | list[float] = [0,]\
-            * self.reading_memory.blocks_number
+        (stop_reset, start_time, steps_counter, controlling_signal)\
+            = self.prepare_calculation(transform, introspect, verbalize)
 
         # Reflections loop
         while True:
@@ -448,16 +453,13 @@ class Brain(Perceptron):
                         # Get passed time
                         passed_time: float = time() - start_time
 
-                        (
-                            signifying_outputs_values,
-                            controlling_signal,
-
-                        ) = self.do_one_step(
-                            signifying_inputs_values,
-                            passed_time, time_limit,
-                            reflections_counter, reflections_limit,
-                            steps_counter, steps_limit,
-                        )
+                        (signifying_outputs_values, controlling_signal)\
+                            = self.do_one_step(
+                                signifying_inputs_values,
+                                passed_time, time_limit,
+                                reflections_counter, reflections_limit,
+                                steps_counter, steps_limit,
+                            )
 
                         # Add character to list of resoults
                         resoults.append(signifying_outputs_values)
@@ -528,28 +530,63 @@ class Brain(Perceptron):
         reflections_limit: int = 7, transform=True, introspect=True,
         verbalize=False,
     ) -> list[NDArray[float]] | list:
+        """
+        The method performs calculations
+        using the recurrent generative neural network
 
-        stop_reset = ['STOP', 'RESET_REFLECTIONS', 'STOP_BY_LIMIT']
+        Args:
+            input_values (Iterable):
+            Input iterable by axis=1 must provide due number of cells
+            to number of signifuing inputs of the net to provide reflections.
 
-        # Atributes for working of decorators
-        self._transforming_error_flag = 0
+            time_limit (int | float | NoneType):
+            Ensures that the calculation stops
+            after the specified time has passed,
+            without waiting a stopping signal,
+            Positive,
+            None for unlimited steps.
+            Defaults to 60.
 
-        self._transform: bool = transform
-        self._introspect: bool = introspect
-        self.__class__._verbalize: bool = verbalize
+            steps_limit (int | NoneType):
+            Ensures that the calculation stops
+            after the specified number of steps has passed -
+            single forvard propogations within the perceptron,
+            Positive,
+            None for unlimited steps.
+            Defaults to None.
 
-        # Start of timer
-        start_time: float = time()
+            reflections_limit (int | NoneType):
+            Limitation on the number of reflection levels,
+            i.e. recursion iterations,
+            Warning - it doesen't stop after reaching of limit,
+            turns back to reflection number 0 instead,
+            Positive,
+            None for unlimited reflections.
+            Defaults to 7.
 
-        # Start of steps counting
-        steps_counter = 0
+            transform (bool):
+            Allows the network to change its own structure,
+            thus changing its efficiency and its memory mechanisms.
+            Defaults to True.
 
-        # initial controlling signal is always do nothing
-        controlling_signal = 'NOTHING'
+            introspect (bool):
+            Allows the network to change its own weights,
+            thus providing memorization and zero-shot learning.
+            Defaults to True.
 
-        # Fill initial reading_memory_inputs_values by zero values
-        self._rmi_values: list[int] | list[float] = [0,]\
-            * self.reading_memory.blocks_number
+            verbalize (bool):
+            Output data about the calculation process to the console.
+            Defaults to False.
+
+        Raises:
+            RuntimeError: if it is impossible delede an input
+            or a writing/reading memory outputs block
+
+        Returns:
+            list[NDArray[float]] | list[]: a resoulting list
+        """
+        (stop_reset, start_time, steps_counter, controlling_signal)\
+            = self.prepare_calculation(transform, introspect, verbalize)
 
         # Reflections loop
         while True:
@@ -574,16 +611,13 @@ class Brain(Perceptron):
                     # Get passed time
                     passed_time: float = time() - start_time
 
-                    (
-                        signifying_outputs_values,
-                        controlling_signal,
-
-                    ) = self.do_one_step(
-                        signifying_inputs_values,
-                        passed_time, time_limit,
-                        reflections_counter, reflections_limit,
-                        steps_counter, steps_limit,
-                    )
+                    (signifying_outputs_values, controlling_signal)\
+                        = self.do_one_step(
+                            signifying_inputs_values,
+                            passed_time, time_limit,
+                            reflections_counter, reflections_limit,
+                            steps_counter, steps_limit,
+                        )
 
                     if controlling_signal in ['SKIP', 'REPEAT']:
                         self.verb('SIGNAL OPERATION IS IMPOSSIBLE')
@@ -665,27 +699,63 @@ class Brain(Perceptron):
         reflections_limit: int = 7, transform=True, introspect=True,
         verbalize=False,
     ) -> list[NDArray[float]] | list:
-        stop_reset = ['STOP', 'RESET_REFLECTIONS', 'STOP_BY_LIMIT']
+        """
+        The method performs calculations
+        using the recurrent generative neural network
 
-        # Atributes for working of decorators
-        self._transforming_error_flag = 0
+        Args:
+            input_values (Iterable):
+            Input iterable by axis=1 must provide due number of cells
+            to number of signifuing inputs of the net to provide reflections.
 
-        self._transform: bool = transform
-        self._introspect: bool = introspect
-        self.__class__._verbalize: bool = verbalize
+            time_limit (int | float | NoneType):
+            Ensures that the calculation stops
+            after the specified time has passed,
+            without waiting a stopping signal,
+            Positive,
+            None for unlimited steps.
+            Defaults to 60.
 
-        # Start of timer
-        start_time: float = time()
+            steps_limit (int | NoneType):
+            Ensures that the calculation stops
+            after the specified number of steps has passed -
+            single forvard propogations within the perceptron,
+            Positive,
+            None for unlimited steps.
+            Defaults to None.
 
-        # Start of steps counting
-        steps_counter = 0
+            reflections_limit (int | NoneType):
+            Limitation on the number of reflection levels,
+            i.e. recursion iterations,
+            Warning - it doesen't stop after reaching of limit,
+            turns back to reflection number 0 instead,
+            Positive,
+            None for unlimited reflections.
+            Defaults to 7.
 
-        # initial controlling signal is always do nothing
-        controlling_signal = 'NOTHING'
+            transform (bool):
+            Allows the network to change its own structure,
+            thus changing its efficiency and its memory mechanisms.
+            Defaults to True.
 
-        # Fill initial reading_memory_inputs_values by zero values
-        self._rmi_values: list[int] | list[float] = [0,]\
-            * self.reading_memory.blocks_number
+            introspect (bool):
+            Allows the network to change its own weights,
+            thus providing memorization and zero-shot learning.
+            Defaults to True.
+
+            verbalize (bool):
+            Output data about the calculation process to the console.
+            Defaults to False.
+
+        Raises:
+            RuntimeError: if it is impossible delede an input
+            or a writing/reading memory outputs block
+
+        Returns:
+            list[NDArray[float]]: a resoulting list
+        """
+        (stop_reset, start_time, steps_counter, controlling_signal)\
+            = self.prepare_calculation(transform, introspect, verbalize)
 
         # Reflections loop
         while True:
@@ -717,16 +787,13 @@ class Brain(Perceptron):
                         # Get passed time
                         passed_time: float = time() - start_time
 
-                        (
-                            signifying_outputs_values,
-                            controlling_signal,
-
-                        ) = self.do_one_step(
-                            signifying_inputs_values,
-                            passed_time, time_limit,
-                            reflections_counter, reflections_limit,
-                            steps_counter, steps_limit,
-                        )
+                        (signifying_outputs_values, controlling_signal)\
+                            = self.do_one_step(
+                                signifying_inputs_values,
+                                passed_time, time_limit,
+                                reflections_counter, reflections_limit,
+                                steps_counter, steps_limit,
+                            )
 
                         # Add character to list of resoults
                         resoults = [signifying_outputs_values]
