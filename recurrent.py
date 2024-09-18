@@ -279,6 +279,62 @@ class Brain(Perceptron):
             resoult.append(element)
         return array(resoult)
 
+    def do_one_step(
+        self, signifying_inputs_values, passed_time, time_limit,
+        reflections_counter, reflections_limit, steps_counter, steps_limit,
+    ):
+        self.verbalize_input_values(
+            signifying_inputs_values,
+            passed_time, time_limit,
+            reflections_counter, reflections_limit,
+            steps_counter, steps_limit,
+        )
+
+        inputs_values_list = self.turn_Nones_negative_ones(
+            [
+                *signifying_inputs_values,
+                passed_time, time_limit,
+                self._transforming_error_flag,
+                reflections_counter, reflections_limit,
+                steps_counter, steps_limit,
+                *self._rmi_values,
+            ]
+        )
+        (
+            signifying_outputs_values,
+            controlling_signal_outputs_values,
+            transforming_outputs_values,
+            writing_memory_outputs_values,
+            reading_memory_outputs_values,
+
+        ) = split_by_volumes(
+            list_for_split=super().__call__(
+                array(inputs_values_list),
+            ),
+            volumes=self.outputs_structure.values(),
+            extract_single_values=False,
+            get_rest=False,
+        )
+
+        # Get controlling signal
+        controlling_signal = get_element_by_decimal(
+            self.CONTROLLING_SIGNALS,
+            controlling_signal_outputs_values[-1],
+        )
+        self.verb(f'CONTROLLING SIGNAL: {controlling_signal}')
+
+        # Introspection
+        self.writing_memory\
+            .write_weights(writing_memory_outputs_values)
+
+        self._rmi_values = self.reading_memory\
+            .read_weights(reading_memory_outputs_values)
+
+        # Transforming
+        self.transform(transforming_outputs_values)
+
+        return signifying_outputs_values, controlling_signal
+
     def __call__(
         self, input_values: Iterable,
         time_limit: int | float = 60, steps_limit: int | NoneType = None,
@@ -392,55 +448,16 @@ class Brain(Perceptron):
                         # Get passed time
                         passed_time: float = time() - start_time
 
-                        self.verbalize_input_values(
+                        (
+                            signifying_outputs_values,
+                            controlling_signal,
+
+                        ) = self.do_one_step(
                             signifying_inputs_values,
                             passed_time, time_limit,
                             reflections_counter, reflections_limit,
                             steps_counter, steps_limit,
                         )
-
-                        inputs_values_list = self.turn_Nones_negative_ones(
-                            [
-                                *signifying_inputs_values,
-                                passed_time, time_limit,
-                                self._transforming_error_flag,
-                                reflections_counter, reflections_limit,
-                                steps_counter, steps_limit,
-                                *self._rmi_values,
-                            ]
-                        )
-                        (
-                            signifying_outputs_values,
-                            controlling_signal_outputs_values,
-                            transforming_outputs_values,
-                            writing_memory_outputs_values,
-                            reading_memory_outputs_values,
-
-                        ) = split_by_volumes(
-                            list_for_split=super().__call__(
-                                array(inputs_values_list),
-                            ),
-                            volumes=self.outputs_structure.values(),
-                            extract_single_values=False,
-                            get_rest=False,
-                        )
-
-                        # Get controlling signal
-                        controlling_signal = get_element_by_decimal(
-                            self.CONTROLLING_SIGNALS,
-                            controlling_signal_outputs_values[-1],
-                        )
-                        self.verb(f'CONTROLLING SIGNAL: {controlling_signal}')
-
-                        # Introspection
-                        self.writing_memory\
-                            .write_weights(writing_memory_outputs_values)
-
-                        self._rmi_values = self.reading_memory\
-                            .read_weights(reading_memory_outputs_values)
-
-                        # Transforming
-                        self.transform(transforming_outputs_values)
 
                         # Add character to list of resoults
                         resoults.append(signifying_outputs_values)
@@ -557,58 +574,20 @@ class Brain(Perceptron):
                     # Get passed time
                     passed_time: float = time() - start_time
 
-                    self.verbalize_input_values(
+                    (
+                        signifying_outputs_values,
+                        controlling_signal,
+
+                    ) = self.do_one_step(
                         signifying_inputs_values,
                         passed_time, time_limit,
                         reflections_counter, reflections_limit,
                         steps_counter, steps_limit,
                     )
 
-                    inputs_values_list = self.turn_Nones_negative_ones(
-                        [
-                            *signifying_inputs_values,
-                            passed_time, time_limit,
-                            self._transforming_error_flag,
-                            reflections_counter, reflections_limit,
-                            steps_counter, steps_limit,
-                            *self._rmi_values,
-                        ]
-                    )
-                    (
-                        signifying_outputs_values,
-                        controlling_signal_outputs_values,
-                        transforming_outputs_values,
-                        writing_memory_outputs_values,
-                        reading_memory_outputs_values,
-
-                    ) = split_by_volumes(
-                        list_for_split=super().__call__(
-                            array(inputs_values_list),
-                        ),
-                        volumes=self.outputs_structure.values(),
-                        extract_single_values=False,
-                        get_rest=False,
-                    )
-
-                    # Get controlling signal
-                    controlling_signal = get_element_by_decimal(
-                        self.CONTROLLING_SIGNALS,
-                        controlling_signal_outputs_values[-1],
-                    )
-                    self.verb(f'CONTROLLING SIGNAL: {controlling_signal}')
                     if controlling_signal in ['SKIP', 'REPEAT']:
                         self.verb('SIGNAL OPERATION IS IMPOSSIBLE')
                         self.verb('CUZ DUE RESOULTS LENGTH IS ACTIVE')
-
-                    # Introspection
-                    self.writing_memory\
-                        .write_weights(writing_memory_outputs_values)
-
-                    self._rmi_values = self.reading_memory\
-                        .read_weights(reading_memory_outputs_values)
-
-                    # Transforming
-                    self.transform(transforming_outputs_values)
 
                     # Add character to list of resoults
                     resoults.append(signifying_outputs_values)
@@ -738,55 +717,16 @@ class Brain(Perceptron):
                         # Get passed time
                         passed_time: float = time() - start_time
 
-                        self.verbalize_input_values(
+                        (
+                            signifying_outputs_values,
+                            controlling_signal,
+
+                        ) = self.do_one_step(
                             signifying_inputs_values,
                             passed_time, time_limit,
                             reflections_counter, reflections_limit,
                             steps_counter, steps_limit,
                         )
-
-                        inputs_values_list = self.turn_Nones_negative_ones(
-                            [
-                                *signifying_inputs_values,
-                                passed_time, time_limit,
-                                self._transforming_error_flag,
-                                reflections_counter, reflections_limit,
-                                steps_counter, steps_limit,
-                                *self._rmi_values,
-                            ]
-                        )
-                        (
-                            signifying_outputs_values,
-                            controlling_signal_outputs_values,
-                            transforming_outputs_values,
-                            writing_memory_outputs_values,
-                            reading_memory_outputs_values,
-
-                        ) = split_by_volumes(
-                            list_for_split=super().__call__(
-                                array(inputs_values_list),
-                            ),
-                            volumes=self.outputs_structure.values(),
-                            extract_single_values=False,
-                            get_rest=False,
-                        )
-
-                        # Get controlling signal
-                        controlling_signal = get_element_by_decimal(
-                            self.CONTROLLING_SIGNALS,
-                            controlling_signal_outputs_values[-1],
-                        )
-                        self.verb(f'CONTROLLING SIGNAL: {controlling_signal}')
-
-                        # Introspection
-                        self.writing_memory\
-                            .write_weights(writing_memory_outputs_values)
-
-                        self._rmi_values = self.reading_memory\
-                            .read_weights(reading_memory_outputs_values)
-
-                        # Transforming
-                        self.transform(transforming_outputs_values)
 
                         # Add character to list of resoults
                         resoults = [signifying_outputs_values]
@@ -845,10 +785,11 @@ class Brain(Perceptron):
                 self.verb('NEXT REFLECTION')
 
             # Stop reflections loop
-            if controlling_signal != 'RESET_REFLECTIONS':
+            if controlling_signal == 'RESET_REFLECTIONS' or resoults == list():
+                self.verb('REFLECTIONS ARE RESET')
+            else:
                 self.verb('THE END.\n')
                 break
-            self.verb('REFLECTIONS ARE RESET')
         return resoults
 
     @property
@@ -929,7 +870,7 @@ if __name__ == '__main__':
     for iteration in range(100):
         print(f'\nITERATION NUMBER {iteration}\n')
         print(
-            BigBrain().calculate_with_just_last_resoult(
+            BigBrain()(
                 [[789], [7], [8], [9], [1], [0], [5], [6]],
                 verbalize=True,
             ),
